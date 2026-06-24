@@ -166,11 +166,11 @@ function StatItem({ stat }: { stat: (typeof STATS)[number] }) {
 }
 
 function HorizontalDivider() {
-  return <div className="w-20 h-px bg-black/10"></div>
+  return <div className="w-20 h-px bg-black/30"></div>
 }
 
 function VerticalDivider() {
-  return <div className="w-px flex grow bg-black/10"></div>
+  return <div className="w-px flex grow bg-black/30"></div>
 }
 
 function HeroImage({

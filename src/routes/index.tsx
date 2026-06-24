@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import IndexLoader from '@/components/IndexLoader'
 import Hero from '#/components/index/Hero'
+import Subsection from '#/components/index/Subsection'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -9,10 +10,8 @@ function App() {
     <main className="page-wrap bg-[#F8F6F2]" data-header-theme="light">
       <IndexLoader />
       <Hero />
-      <section
-        className="min-h-[300svh] w-full relative bg-cover bg-center"
-        data-header-theme="light"
-      ></section>
+      <Subsection />
+      <section className="min-h-[200dvh] bg-amber-50"></section>
     </main>
   )
 }
