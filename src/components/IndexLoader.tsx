@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
+const CIRCLES = ['c1', 'c2', 'c3', 'c4']
+
 export default function IndexLoader() {
   const circlesRef = useRef<(SVGCircleElement | null)[]>([])
   const mainRef = useRef<HTMLElement | null>(null)
@@ -50,8 +52,6 @@ export default function IndexLoader() {
     return null
   }
 
-  const circles = ['c1', 'c2', 'c3', 'c4']
-
   return (
     <main
       ref={mainRef}
@@ -60,7 +60,7 @@ export default function IndexLoader() {
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <svg width="280" height="100" viewBox="0 0 280 100">
-          {circles.map((circle, index) => (
+          {CIRCLES.map((circle, index) => (
             <circle
               key={circle}
               ref={(el) => {
