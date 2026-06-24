@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 
 export default function IndexLoader() {
   const circlesRef = useRef<(SVGCircleElement | null)[]>([])
   const mainRef = useRef<HTMLElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
+  useGSAP(() => {
     const tl = gsap.timeline()
 
     circlesRef.current.forEach((circle, index) => {
@@ -22,7 +23,7 @@ export default function IndexLoader() {
             duration: 1.5,
             ease: 'power1.inOut',
           },
-          index * 0.5
+          index * 0.5,
         )
       }
     })
@@ -35,7 +36,7 @@ export default function IndexLoader() {
         duration: 0.7,
         ease: 'power2.inOut',
       },
-      '+=0.2'
+      '+=0.2',
     )
 
     const hideTimer = setTimeout(() => {
@@ -52,7 +53,11 @@ export default function IndexLoader() {
   const circles = ['c1', 'c2', 'c3', 'c4']
 
   return (
-    <main ref={mainRef} className="w-full min-h-screen bg-black absolute z-50 -translate-1/2 left-1/2 top-1/2">
+    <main
+      ref={mainRef}
+      className="w-full min-h-screen bg-black fixed z-50 -translate-1/2 left-1/2 top-1/2"
+      data-header-theme="dark"
+    >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <svg width="280" height="100" viewBox="0 0 280 100">
           {circles.map((circle, index) => (
