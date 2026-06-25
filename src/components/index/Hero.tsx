@@ -122,11 +122,12 @@ function BackgroundTitle() {
 
 function BackgroundStats() {
   return (
-    <ul className="mt-4 grid grow grid-cols-2 gap-x-6 gap-y-5 py-8 px-4 lg:py-4 text-4xl text-black sm:grid-cols-3 sm:text-5xl lg:flex lg:flex-row lg:justify-between lg:gap-8 lg:text-7xl">
+    <ul className="mt-2 grid grow grid-cols-2 gap-x-5 gap-y-2 p-2 text-3xl leading-none text-black sm:mt-4 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-5 sm:p-4 sm:text-5xl lg:flex lg:flex-row lg:justify-between lg:gap-8 lg:text-7xl">
       {STATS.map((stat, index) => (
         <StatGroup
           key={stat.label}
           stat={stat}
+          isLast={index === STATS.length - 1}
           showDivider={index < STATS.length - 1}
         />
       ))}
@@ -135,34 +136,46 @@ function BackgroundStats() {
 }
 
 function StatGroup({
+  isLast,
   stat,
   showDivider,
 }: {
+  isLast: boolean
   stat: (typeof STATS)[number]
   showDivider: boolean
 }) {
   return (
     <>
-      <StatItem stat={stat} />
+      <StatItem stat={stat} isLast={isLast} />
       {showDivider && <VerticalDivider />}
     </>
   )
 }
 
-function StatItem({ stat }: { stat: (typeof STATS)[number] }) {
+function StatItem({
+  isLast,
+  stat,
+}: {
+  isLast: boolean
+  stat: (typeof STATS)[number]
+}) {
   return (
-    <li className="flex flex-col items-center justify-center text-center">
+    <li
+      className={`flex flex-col items-center justify-center text-center ${
+        isLast ? 'col-span-2 sm:col-span-1' : ''
+      }`}
+    >
       {stat.suffix ? (
         <span className="inline-flex items-center">
           {stat.value}
-          <span className="text-2xl leading-none sm:text-4xl">
+          <span className="text-xl leading-none sm:text-4xl">
             {stat.suffix}
           </span>
         </span>
       ) : (
         <span>{stat.value}</span>
       )}
-      <h4 className="font-jetbrains mt-1 text-[10px] text-black/30 sm:text-sm">
+      <h4 className="font-jetbrains mt-1 text-[9px] leading-tight text-black/30 sm:text-sm">
         {stat.label}
       </h4>
     </li>
