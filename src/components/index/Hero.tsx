@@ -14,7 +14,7 @@ const BACKGROUND_YEARS = [
       'col-span-2 row-span-1 row-start-2 col-start-2 self-center justify-self-start text-[180px] font-black font-jetbrains',
   },
   {
-    year: '2025',
+    year: '2026',
     className:
       'col-span-2 row-span-1 row-start-2 col-start-15 self-center text-[180px] font-black font-jetbrains',
   },

@@ -51,7 +51,7 @@ export default function Subsection() {
     const letterTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: SubsectionRef.current,
-        start: '25% 75%',
+        start: '75% 75%',
         end: '75% center',
         scrub: true,
       },
@@ -60,8 +60,8 @@ export default function Subsection() {
     const sideTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: SubsectionRef.current,
-        start: '50% 75%',
-        end: '75% center',
+        start: 'bottom 75%',
+        end: 'bottom center',
         scrub: true,
       },
     })
@@ -95,7 +95,7 @@ export default function Subsection() {
   return (
     <section
       ref={sectionRef}
-      className="min-h-[80dvh] w-full grid grid-cols-5 px-20"
+      className="min-h-screen sticky top-0 w-full grid grid-cols-5 px-20 z-10"
     >
       <div className="flex flex-col gap-4 col-start-1 col-span-1 justify-center items-start font-jetbrains text-sm">
         <h1 className="border-b w-full pb-4 border-black/30 uppercase">

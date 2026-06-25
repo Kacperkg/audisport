@@ -39,7 +39,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="font-sans">
         <Header />
         {children}
-        <Footer />
         <TanStackDevtools
           config={{
             position: 'bottom-right',

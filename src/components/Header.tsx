@@ -19,9 +19,9 @@ export default function Header() {
       ref={headerRef}
       className={`fixed inset-x-0 top-0 z-50 px-6 py-5 transition-colors duration-200 sm:px-10 sm:py-6 ${textColor} backdrop-blur-xs`}
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
+      <div className="grid grid-cols-2 items-center gap-4">
         <BrandLink />
-        <HeaderNav pathname={pathname} />
+        {/* <HeaderNav pathname={pathname} /> */}
         <HeaderMeta />
       </div>
     </header>
