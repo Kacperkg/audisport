@@ -5,6 +5,7 @@ import Footer from '../components/Footer'
 import Header from '../components/Header'
 
 import appCss from '../styles.css?url'
+import { useEffect } from 'react'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -30,10 +31,27 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {  
+function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (!('scrollRestoration' in window.history)) return
+
+    window.history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+
+    return () => {
+      window.history.scrollRestoration = 'auto'
+    }
+  }, [])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; scrollTo(0, 0);",
+          }}
+        />
         <HeadContent />
       </head>
       <body className="font-sans">

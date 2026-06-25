@@ -79,126 +79,178 @@ export default function SectionOne() {
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return
 
+    const media = gsap.matchMedia()
+
     const getScrollDistance = () =>
       trackRef.current ? trackRef.current.scrollWidth - window.innerWidth : 0
 
-    const revealItems = gsap.utils.toArray<HTMLElement>(
-      trackRef.current.querySelectorAll('[data-story-reveal-item]'),
-    )
-    const textContents = gsap.utils.toArray<HTMLElement>(
-      trackRef.current.querySelectorAll('[data-text-content]'),
-    )
-    const textWipes = gsap.utils.toArray<HTMLSpanElement>(
-      trackRef.current.querySelectorAll('[data-text-wipe]'),
-    )
-    const redBlocks = gsap.utils.toArray<HTMLElement>(
-      trackRef.current.querySelectorAll('[data-red-block]'),
-    )
-    const revealedItems = new Set<HTMLElement>()
+    const createRevealController = () => {
+      if (!trackRef.current) return null
 
-    gsap.set(textContents, { opacity: 0 })
-    gsap.set(textWipes, { scaleX: 0, transformOrigin: 'left center' })
-    gsap.set(redBlocks, { opacity: 0, scale: 0, transformOrigin: 'center' })
+      const revealItems = gsap.utils.toArray<HTMLElement>(
+        trackRef.current.querySelectorAll('[data-story-reveal-item]'),
+      )
+      const textContents = gsap.utils.toArray<HTMLElement>(
+        trackRef.current.querySelectorAll('[data-text-content]'),
+      )
+      const textWipes = gsap.utils.toArray<HTMLSpanElement>(
+        trackRef.current.querySelectorAll('[data-text-wipe]'),
+      )
+      const redBlocks = gsap.utils.toArray<HTMLElement>(
+        trackRef.current.querySelectorAll('[data-red-block]'),
+      )
+      const revealedItems = new Set<HTMLElement>()
 
-    const getTrackOffset = (element: HTMLElement) => {
-      let offset = 0
-      let current: HTMLElement | null = element
+      gsap.set(textContents, { opacity: 0 })
+      gsap.set(textWipes, { scaleX: 0, transformOrigin: 'left center' })
+      gsap.set(redBlocks, { opacity: 0, scale: 0, transformOrigin: 'center' })
 
-      while (current && current !== trackRef.current) {
-        offset += current.offsetLeft
-        current = current.offsetParent as HTMLElement | null
-      }
+      const getTrackOffset = (element: HTMLElement) => {
+        let offset = 0
+        let current: HTMLElement | null = element
 
-      return offset
-    }
-
-    const revealTextItem = (item: HTMLElement) => {
-      if (item.dataset.revealType === 'soft') {
-        gsap.to(item, {
-          opacity: 1,
-          y: 0,
-          filter: 'blur(0px)',
-          clipPath: 'inset(0% 0% 0% 0%)',
-          duration: 0.65,
-          ease: 'power3.out',
-        })
-        return
-      }
-
-      const content = item.querySelector<HTMLElement>('[data-text-content]')
-      const wipe = item.querySelector<HTMLSpanElement>('[data-text-wipe]')
-
-      if (!content || !wipe) return
-
-      gsap
-        .timeline()
-        .set(wipe, { transformOrigin: 'left center' })
-        .to(wipe, { scaleX: 1, duration: 0.2, ease: 'power3.inOut' })
-        .set(content, { opacity: 1 }, 0.16)
-        .set(wipe, { transformOrigin: 'right center' }, 0.2)
-        .to(wipe, { scaleX: 0, duration: 0.24, ease: 'power3.inOut' }, 0.2)
-    }
-
-    const revealItem = (item: HTMLElement) => {
-      if (revealedItems.has(item)) return
-
-      revealedItems.add(item)
-
-      if (item.dataset.redBlock !== undefined) {
-        gsap.to(item, {
-          opacity: 1,
-          scale: 1,
-          duration: 0.65,
-          ease: 'power3.out',
-        })
-        return
-      }
-
-      revealTextItem(item)
-    }
-
-    const revealActiveItems = (progress: number) => {
-      const scrollDistance = getScrollDistance()
-      const revealPoint = progress * scrollDistance + window.innerWidth * 0.75
-
-      ;[...revealItems, ...redBlocks].forEach((item) => {
-        if (revealPoint >= getTrackOffset(item)) {
-          revealItem(item)
+        while (current && current !== trackRef.current) {
+          offset += current.offsetLeft
+          current = current.offsetParent as HTMLElement | null
         }
-      })
+
+        return offset
+      }
+
+      const revealTextItem = (item: HTMLElement) => {
+        if (item.dataset.revealType === 'soft') {
+          gsap.to(item, {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            clipPath: 'inset(0% 0% 0% 0%)',
+            duration: 0.65,
+            ease: 'power3.out',
+          })
+          return
+        }
+
+        const content = item.querySelector<HTMLElement>('[data-text-content]')
+        const wipe = item.querySelector<HTMLSpanElement>('[data-text-wipe]')
+
+        if (!content || !wipe) return
+
+        gsap
+          .timeline()
+          .set(wipe, { transformOrigin: 'left center' })
+          .to(wipe, { scaleX: 1, duration: 0.2, ease: 'power3.inOut' })
+          .set(content, { opacity: 1 }, 0.16)
+          .set(wipe, { transformOrigin: 'right center' }, 0.2)
+          .to(wipe, { scaleX: 0, duration: 0.24, ease: 'power3.inOut' }, 0.2)
+      }
+
+      const revealItem = (item: HTMLElement) => {
+        if (revealedItems.has(item)) return
+
+        revealedItems.add(item)
+
+        if (item.dataset.redBlock !== undefined) {
+          gsap.to(item, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.65,
+            ease: 'power3.out',
+          })
+          return
+        }
+
+        revealTextItem(item)
+      }
+
+      const revealActiveItems = (progress: number) => {
+        const scrollDistance = getScrollDistance()
+        const revealPoint = progress * scrollDistance + window.innerWidth * 0.75
+
+        ;[...revealItems, ...redBlocks].forEach((item) => {
+          if (revealPoint >= getTrackOffset(item)) {
+            revealItem(item)
+          }
+        })
+      }
+
+      const revealOnScroll = () => {
+        ;[...revealItems, ...redBlocks].forEach((item) => {
+          ScrollTrigger.create({
+            trigger: item,
+            start: 'top 82%',
+            once: true,
+            onEnter: () => revealItem(item),
+          })
+        })
+      }
+
+      return { revealActiveItems, revealItem, revealOnScroll }
     }
 
-    const timeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: 'top top',
-        end: () => `+=${getScrollDistance()}`,
-        pin: true,
-        scrub: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onRefresh: () => revealActiveItems(0),
-        onUpdate: (self) => revealActiveItems(self.progress),
-      },
+    media.add('(min-width: 1024px)', () => {
+      const revealController = createRevealController()
+      if (!revealController || !sectionRef.current || !trackRef.current) return
+
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: () => `+=${getScrollDistance()}`,
+          pin: true,
+          scrub: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onRefresh: () => revealController.revealActiveItems(0),
+          onUpdate: (self) => revealController.revealActiveItems(self.progress),
+        },
+      })
+
+      timeline.to(
+        trackRef.current,
+        {
+          x: () => -getScrollDistance(),
+          ease: 'none',
+          duration: STORY_PANEL_COUNT - 1,
+        },
+        0,
+      )
     })
 
-    timeline.to(
-      trackRef.current,
-      {
-        x: () => -getScrollDistance(),
-        ease: 'none',
-        duration: STORY_PANEL_COUNT - 1,
-      },
-      0,
-    )
+    media.add('(max-width: 1023px)', () => {
+      const revealController = createRevealController()
+      if (!revealController) return
+
+      if (trackRef.current) {
+        gsap.set(trackRef.current, { clearProps: 'transform' })
+      }
+
+      revealController.revealOnScroll()
+
+      const firstPanelItems = gsap.utils.toArray<HTMLElement>(
+        trackRef.current?.querySelectorAll(
+          '[data-story-panel]:first-child [data-story-reveal-item]',
+        ) ?? [],
+      )
+
+      firstPanelItems.forEach((item) => {
+        if (item.getBoundingClientRect().top < window.innerHeight) {
+          revealController.revealItem(item)
+        }
+      })
+    })
+
+    return () => media.revert()
   }, [])
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen overflow-hidden bg-black"
+      className="relative bg-black lg:h-screen lg:overflow-hidden"
     >
-      <div ref={trackRef} className="flex h-full w-max">
+      <div
+        ref={trackRef}
+        className="flex w-full flex-col lg:h-full lg:w-max lg:flex-row"
+      >
         <IntroPanel />
         {CHAPTERS.map((chapter, index) => (
           <StoryChapter key={chapter.title} chapter={chapter} index={index} />
@@ -212,21 +264,25 @@ export default function SectionOne() {
 function IntroPanel() {
   return (
     <article
-      className="relative flex h-full w-screen shrink-0 items-center justify-center overflow-hidden bg-black px-20 text-white"
+      className="relative flex min-h-screen w-full shrink-0 items-center justify-center overflow-hidden bg-black px-6 py-28 text-white sm:px-10 lg:h-full lg:w-screen lg:px-20 lg:py-0"
       data-header-theme="dark"
       data-story-panel
     >
-      <p className="absolute bottom-20 right-20 font-jetbrains text-[11px] uppercase tracking-[0.3em] text-white/35">
+      <p className="font-jetbrains absolute bottom-12 right-6 text-[10px] uppercase tracking-[0.3em] text-white/35 sm:right-10 lg:bottom-20 lg:right-20 lg:text-[11px]">
         Scroll to begin
       </p>
       <div className="text-center">
-        <motion.h1 whileInView={{ opacity: [0, 1] }} transition={{ duration: 1.2, delay: 2 }} className="font-jetbrains text-xs uppercase tracking-[0.35em] text-white/40">
+        <motion.h1
+          whileInView={{ opacity: [0, 1] }}
+          transition={{ duration: 1.2, delay: 2 }}
+          className="font-jetbrains text-xs uppercase tracking-[0.35em] text-white/40"
+        >
           Audi Motorsport
         </motion.h1>
         <motion.h1
           whileInView={{ opacity: [0, 1], x: [-20, 0] }}
           transition={{ duration: 1.2, ease: 'easeOut', delay: 1 }}
-          className="mt-8 max-w-[12ch] text-8xl font-black uppercase leading-[0.86] tracking-tight text-white"
+          className="mt-8 max-w-[12ch] text-5xl font-black uppercase leading-[0.86] tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
           Where it all started<span className="text-red-500">.</span>
         </motion.h1>
@@ -249,13 +305,15 @@ function StoryChapter({
 
   return (
     <article
-      className="relative grid h-full w-[128vw] shrink-0 grid-cols-12 overflow-hidden bg-black px-24 py-16 text-white"
+      className="relative grid min-h-screen w-full shrink-0 grid-cols-1 gap-12 overflow-hidden bg-black px-6 py-24 text-white sm:px-10 lg:h-full lg:w-[128vw] lg:grid-cols-12 lg:gap-0 lg:px-24 lg:py-16"
       data-header-theme="dark"
       data-story-panel
     >
       <p
-        className={`pointer-events-none absolute font-jetbrains text-[20vw] font-black leading-none text-white/[0.035] ${
-          isImageLeft ? 'right-24 top-14' : 'left-20 top-12'
+        className={`pointer-events-none absolute font-jetbrains text-[32vw] font-black leading-none text-white/[0.035] lg:text-[20vw] ${
+          isImageLeft
+            ? 'right-6 top-14 lg:right-24'
+            : 'left-6 top-12 lg:left-20'
         }`}
       >
         {chapter.year}
@@ -264,27 +322,27 @@ function StoryChapter({
       <div
         className={`relative z-10 flex flex-col justify-center ${
           isCentered
-            ? 'col-span-5 col-start-5 items-center text-center'
+            ? 'lg:col-span-5 lg:col-start-5 lg:items-center lg:text-center'
             : isImageLeft
-              ? 'col-span-4 col-start-8'
+              ? 'lg:col-span-4 lg:col-start-8'
               : isOffset
-                ? 'col-span-4 col-start-2 justify-end pb-24'
-                : 'col-span-4 col-start-2'
+                ? 'lg:col-span-4 lg:col-start-2 lg:justify-end lg:pb-24'
+                : 'lg:col-span-4 lg:col-start-2'
         }`}
       >
-        <WipeText className="mb-8 flex items-center gap-3 font-jetbrains text-[11px] uppercase tracking-[0.28em] text-white/50">
+        <WipeText className="font-jetbrains mb-8 flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-white/50 sm:text-[11px] sm:tracking-[0.28em]">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
           <span>{chapter.year}</span>
         </WipeText>
 
         <WipeText
           as="h2"
-          className="max-w-[10ch] text-7xl font-black uppercase leading-[0.9] tracking-tight text-white"
+          className="max-w-[10ch] text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl lg:text-7xl"
         >
           {chapter.title}
           <span className="text-red-500">.</span>
         </WipeText>
-        <WipeText className="mt-7 font-jetbrains text-sm uppercase tracking-[0.2em] text-white/60">
+        <WipeText className="font-jetbrains mt-7 text-xs uppercase tracking-[0.18em] text-white/60 sm:text-sm sm:tracking-[0.2em]">
           {chapter.subtitle}
         </WipeText>
         <SoftRevealText className="mt-8 max-w-[46ch] text-base leading-7 text-white/70">
@@ -301,25 +359,25 @@ function StoryChapter({
       <div
         className={`relative flex ${
           isCentered
-            ? 'col-span-9 col-start-2 row-start-1 items-end pb-14'
+            ? 'items-end lg:col-span-9 lg:col-start-2 lg:row-start-1 lg:pb-14'
             : isImageLeft
-              ? 'col-span-5 col-start-2 items-center'
+              ? 'items-center lg:col-span-5 lg:col-start-2'
               : isWideImage
-                ? 'col-span-6 col-start-7 items-end pb-20'
+                ? 'items-end lg:col-span-6 lg:col-start-7 lg:pb-20'
                 : isOffset
-                  ? 'col-span-5 col-start-8 items-start pt-24'
-                  : 'col-span-5 col-start-8 items-center'
+                  ? 'items-start lg:col-span-5 lg:col-start-8 lg:pt-24'
+                  : 'items-center lg:col-span-5 lg:col-start-8'
         }`}
       >
         <div
           className={`bg-red-600/90 ${
             isCentered
-              ? 'h-[18vh] w-full'
+              ? 'h-[26vh] w-full lg:h-[18vh]'
               : isWideImage
-                ? 'h-[42vh] w-full'
+                ? 'h-[34vh] w-full lg:h-[42vh]'
                 : isOffset
-                  ? 'h-[52vh] w-[74%]'
-                  : 'h-[66vh] w-full'
+                  ? 'h-[42vh] w-[74%] lg:h-[52vh]'
+                  : 'h-[42vh] w-full lg:h-[66vh]'
           }`}
           data-red-block
         />
@@ -331,7 +389,7 @@ function StoryChapter({
 function FinalChapter() {
   return (
     <article
-      className="relative flex h-full w-screen shrink-0 items-center justify-center overflow-hidden bg-black px-20 text-center text-white"
+      className="relative flex min-h-screen w-full shrink-0 items-center justify-center overflow-hidden bg-black px-6 py-28 text-center text-white sm:px-10 lg:h-full lg:w-screen lg:px-20 lg:py-0"
       data-header-theme="dark"
       data-story-panel
     >
@@ -339,7 +397,7 @@ function FinalChapter() {
       <div className="relative z-10">
         <WipeText
           as="h2"
-          className="text-8xl font-black uppercase tracking-tight text-white"
+          className="text-5xl font-black uppercase tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
           What's next<span className="text-red-500">?</span>
         </WipeText>

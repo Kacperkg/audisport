@@ -11,12 +11,12 @@ const BACKGROUND_YEARS = [
   {
     year: '1980',
     className:
-      'col-span-2 row-span-1 row-start-2 col-start-2 self-center justify-self-start text-[180px] font-black font-jetbrains',
+      'col-span-2 row-span-1 row-start-2 col-start-2 self-center justify-self-start text-7xl font-black font-jetbrains sm:text-9xl lg:text-[180px]',
   },
   {
     year: '2026',
     className:
-      'col-span-2 row-span-1 row-start-2 col-start-15 self-center text-[180px] font-black font-jetbrains',
+      'col-span-2 row-span-1 row-start-2 col-start-13 self-center text-7xl font-black font-jetbrains sm:col-start-15 sm:text-9xl lg:text-[180px]',
   },
 ]
 
@@ -70,7 +70,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="min-h-[200svh] w-full relative bg-cover bg-center">
+    <section className="relative min-h-[150svh] w-full bg-cover bg-center sm:min-h-[170svh] lg:min-h-[200svh]">
       <div className="w-full sticky top-0" data-header-theme="light">
         <HeroImage heroImageRef={heroImageRef} />
         <BackgroundText />
@@ -81,10 +81,10 @@ export default function Hero() {
 
 function BackgroundText() {
   return (
-    <section className="absolute inset-0 w-full min-h-screen text-black/10 z-0 grid grid-cols-20 grid-rows-3">
+    <section className="absolute inset-0 z-0 grid min-h-screen w-full grid-cols-20 grid-rows-3 overflow-hidden text-black/10">
       <BackgroundYears />
 
-      <div className="col-span-20 row-span-1 row-start-3 self-start justify-self-center text-black mt-20">
+      <div className="col-span-20 row-span-1 row-start-3 mt-8 self-start justify-self-center px-4 text-black sm:mt-14 lg:mt-20">
         <BackgroundTitle />
 
         <BackgroundStats />
@@ -107,9 +107,9 @@ function BackgroundYears() {
 
 function BackgroundTitle() {
   return (
-    <aside className="flex items-center justify-center gap-4">
+    <aside className="flex items-center justify-center gap-3 sm:gap-4">
       <HorizontalDivider />
-      <h1 className="text-center text-xl leading-loose font-medium font-jetbrains">
+      <h1 className="font-jetbrains text-center text-sm font-medium leading-loose sm:text-xl">
         <span className="inline-flex items-center">
           40 <span className="text-sm ml-1 leading-none">+</span>
         </span>{' '}
@@ -122,7 +122,7 @@ function BackgroundTitle() {
 
 function BackgroundStats() {
   return (
-    <ul className="flex flex-row gap-8 text-black text-7xl justify-between grow mt-4 p-4">
+    <ul className="mt-4 grid grow grid-cols-2 gap-x-6 gap-y-5 p-4 text-4xl text-black sm:grid-cols-3 sm:text-5xl lg:flex lg:flex-row lg:justify-between lg:gap-8 lg:text-7xl">
       {STATS.map((stat, index) => (
         <StatGroup
           key={stat.label}
@@ -151,26 +151,30 @@ function StatGroup({
 
 function StatItem({ stat }: { stat: (typeof STATS)[number] }) {
   return (
-    <li className="flex flex-col justify-center items-center">
+    <li className="flex flex-col items-center justify-center text-center">
       {stat.suffix ? (
         <span className="inline-flex items-center">
           {stat.value}
-          <span className="text-4xl leading-none">{stat.suffix}</span>
+          <span className="text-2xl leading-none sm:text-4xl">
+            {stat.suffix}
+          </span>
         </span>
       ) : (
         <span>{stat.value}</span>
       )}
-      <h4 className="text-sm text-black/30 font-jetbrains">{stat.label}</h4>
+      <h4 className="font-jetbrains mt-1 text-[10px] text-black/30 sm:text-sm">
+        {stat.label}
+      </h4>
     </li>
   )
 }
 
 function HorizontalDivider() {
-  return <div className="w-20 h-px bg-black/30"></div>
+  return <div className="h-px w-10 bg-black/30 sm:w-20"></div>
 }
 
 function VerticalDivider() {
-  return <div className="w-px flex grow bg-black/30"></div>
+  return <div className="hidden w-px grow bg-black/30 lg:flex"></div>
 }
 
 function HeroImage({
@@ -182,17 +186,17 @@ function HeroImage({
     <div
       ref={heroImageRef}
       data-header-theme="dark"
-      className="min-h-screen w-full scale-45 bg-no-repeat bg-auto bg-position-[calc(50%+8vw)_center] bg-black grid grid-cols-2 grid-rows-2 z-40 relative px-16 py-12"
+      className="relative z-40 grid min-h-screen w-full scale-30 md:scale-45 grid-cols-1 grid-rows-2 bg-black bg-auto bg-position-[calc(50%+8vw)_center] bg-no-repeat px-6 py-8 sm:scale-40 sm:px-10 sm:py-10 lg:grid-cols-2 lg:px-16 lg:py-12"
       style={{
         backgroundImage: `url(${heroimage})`,
         backgroundSize: 'cover',
       }}
     >
-      <div className="text-white col-span-1 row-span-1 row-start-2 self-end w-full">
-        <h1 className="max-w-[12ch] text-5xl font-bold">
+      <div className="col-span-1 row-span-1 row-start-2 w-full self-end text-white">
+        <h1 className="max-w-[12ch] text-4xl font-bold sm:text-5xl">
           A LEGACY FORGED IN COMPETITION<span className="text-red-500">.</span>
         </h1>
-        <div className="text-xs text-white/60 leading-6 font-jetbrains mt-4">
+        <div className="font-jetbrains mt-4 text-xs leading-6 text-white/60">
           {HERO_DETAILS.map((detail) => (
             <p key={detail}>{detail}</p>
           ))}
@@ -206,7 +210,7 @@ function HeroImage({
 
 function ScrollIndicator() {
   return (
-    <div className="col-span-1 row-span-1 row-start-2 col-start-2 text-white self-end justify-self-end flex flex-col items-center">
+    <div className="col-span-1 row-span-1 row-start-2 hidden flex-col items-center self-end justify-self-end text-white sm:flex lg:col-start-2">
       <p className="text-xs uppercase tracking-widest font-jetbrains">SCROLL</p>
       <div className="h-3" />
       <div className="w-px h-15 bg-white" />

@@ -95,9 +95,9 @@ export default function Subsection() {
   return (
     <section
       ref={sectionRef}
-      className="min-h-screen sticky top-0 w-full grid grid-cols-5 px-20 z-10"
+      className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 lg:sticky lg:top-0 lg:grid-cols-5 lg:gap-0 lg:px-20 lg:py-0"
     >
-      <div className="flex flex-col gap-4 col-start-1 col-span-1 justify-center items-start font-jetbrains text-sm">
+      <div className="font-jetbrains order-2 flex flex-col items-start justify-center gap-4 text-sm lg:order-none lg:col-span-1 lg:col-start-1">
         <h1 className="border-b w-full pb-4 border-black/30 uppercase">
           Our Philosophy
         </h1>
@@ -112,13 +112,13 @@ export default function Subsection() {
       </div>
       <div
         ref={SubsectionRef}
-        className="flex flex-col gap-4 col-start-2 col-span-3 justify-center items-center text-center text-6xl uppercase font-black leading-12"
+        className="order-1 flex flex-col items-center justify-center gap-4 text-center text-4xl font-black uppercase leading-[0.9] sm:text-5xl lg:order-none lg:col-span-3 lg:col-start-2 lg:text-6xl lg:leading-12"
       >
         {STATEMENT_LINES.map((line) => (
           <AnimatedLine key={line.text} {...line} />
         ))}
       </div>
-      <div className="flex flex-col gap-4 col-start-5 col-span-1 justify-center items-start font-jetbrains text-sm">
+      <div className="font-jetbrains order-3 flex flex-col items-start justify-center gap-4 text-sm lg:order-none lg:col-span-1 lg:col-start-5">
         <h1 className="border-b w-full pb-4 border-black/30 uppercase">
           Our purpose
         </h1>

@@ -12,11 +12,11 @@ function App() {
       <IndexLoader />
       <Hero />
       <section className="relative">
-        <div className="min-h-[200dvh]">
+        <div className="min-h-screen lg:min-h-[250dvh]">
           <Subsection />
         </div>
         <div
-          className="relative z-20 mt-[-75dvh] bg-black"
+          className="relative z-20 bg-black lg:mt-[-75dvh]"
           data-header-theme="dark"
         >
           <SectionOne />
