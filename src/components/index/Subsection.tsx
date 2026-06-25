@@ -95,7 +95,7 @@ export default function Subsection() {
   return (
     <section
       ref={sectionRef}
-      className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 lg:sticky lg:top-0 lg:grid-cols-5 lg:gap-0 lg:px-20 lg:py-0"
+      className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 lg:sticky lg:top-0 lg:grid-cols-5 lg:gap-0 lg:px-20 lg:py-0 mt-10"
     >
       <div className="font-jetbrains order-2 flex flex-col items-start justify-center gap-4 text-sm lg:order-none lg:col-span-1 lg:col-start-1">
         <h1 className="border-b w-full pb-4 border-black/30 uppercase">
