@@ -272,20 +272,16 @@ function IntroPanel() {
         Scroll to begin
       </p>
       <div className="text-center">
-        <motion.h1
-          whileInView={{ opacity: [0, 1] }}
-          transition={{ duration: 1.2, delay: 2 }}
+        <h1
           className="font-jetbrains text-xs uppercase tracking-[0.35em] text-white/40"
         >
           Audi Motorsport
-        </motion.h1>
-        <motion.h1
-          whileInView={{ opacity: [0, 1], x: [-20, 0] }}
-          transition={{ duration: 1.2, ease: 'easeOut', delay: 1 }}
+        </h1>
+        <h1
           className="mt-8 max-w-[12ch] text-5xl font-black uppercase leading-[0.86] tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
           Where it all started<span className="text-red-500">.</span>
-        </motion.h1>
+        </h1>
       </div>
     </article>
   )
