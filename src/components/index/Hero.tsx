@@ -70,7 +70,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative min-h-[150svh] w-full bg-cover bg-center sm:min-h-[170svh] lg:min-h-[200svh]">
+    <section className="relative min-h-[150dvh] w-full bg-cover bg-center sm:min-h-[170dvh] lg:min-h-[200dvh]">
       <div className="w-full sticky top-0" data-header-theme="light">
         <HeroImage heroImageRef={heroImageRef} />
         <BackgroundText />
