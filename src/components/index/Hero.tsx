@@ -122,7 +122,7 @@ function BackgroundTitle() {
 
 function BackgroundStats() {
   return (
-    <ul className="mt-4 grid grow grid-cols-2 gap-x-6 gap-y-5 p-4 text-4xl text-black sm:grid-cols-3 sm:text-5xl lg:flex lg:flex-row lg:justify-between lg:gap-8 lg:text-7xl">
+    <ul className="mt-4 grid grow grid-cols-2 gap-x-6 gap-y-5 py-8 px-4 lg:py-4 text-4xl text-black sm:grid-cols-3 sm:text-5xl lg:flex lg:flex-row lg:justify-between lg:gap-8 lg:text-7xl">
       {STATS.map((stat, index) => (
         <StatGroup
           key={stat.label}
