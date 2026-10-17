@@ -67,15 +67,13 @@ export default function Hero() {
   useGSAP(() => {
     if (!heroSectionRef.current || !heroImageRef.current) return
 
-    const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
-    const supportsNativeWebKitScrollAnimation =
+    const usesNativeWebKitScrollAnimation =
       window.matchMedia('(max-width: 1023px)').matches &&
+      window.matchMedia('(prefers-reduced-motion: no-preference)').matches &&
       CSS.supports('-webkit-touch-callout', 'none') &&
       CSS.supports('animation-timeline', 'view()')
 
-    if (prefersReducedMotion || supportsNativeWebKitScrollAnimation) return
+    if (usesNativeWebKitScrollAnimation) return
 
     gsap.fromTo(
       heroImageRef.current,
