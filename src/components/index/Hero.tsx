@@ -1,4 +1,3 @@
-import heroimage from '../../../public/AU090348_medium.jpg'
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -36,6 +35,7 @@ const STATS = [
 ]
 
 export default function Hero() {
+  const heroSectionRef = useRef<HTMLElement | null>(null)
   const heroImageRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -65,25 +65,37 @@ export default function Hero() {
   }, [])
 
   useGSAP(() => {
-    if (!heroImageRef.current) return
+    if (!heroSectionRef.current || !heroImageRef.current) return
 
-    gsap.from(heroImageRef.current, {
-      scale: 1,
-      force3D: true,
-      transformOrigin: 'center center',
-      ease: 'none',
-      scrollTrigger: {
-        trigger: heroImageRef.current,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
+    gsap.fromTo(
+      heroImageRef.current,
+      { scale: 1 },
+      {
+        scale: () => {
+          if (window.innerWidth >= 768) return 0.45
+          if (window.innerWidth >= 640) return 0.4
+          return 0.3
+        },
+        force3D: true,
+        transformOrigin: 'center center',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroSectionRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
       },
-    })
+    )
   }, [])
 
   return (
-    <section className="relative min-h-[150svh] w-full sm:min-h-[170svh] lg:min-h-[200svh]">
-      <div className="w-full sticky top-0" data-header-theme="light">
+    <section
+      ref={heroSectionRef}
+      className="relative min-h-[calc(100dvh+50svh)] w-full sm:min-h-[calc(100dvh+70svh)] lg:min-h-[200dvh]"
+    >
+      <div className="sticky top-0 h-[100dvh] w-full" data-header-theme="light">
         <HeroImage heroImageRef={heroImageRef} />
         <BackgroundText />
       </div>
@@ -93,7 +105,7 @@ export default function Hero() {
 
 function BackgroundText() {
   return (
-    <section className="absolute inset-0 z-0 grid min-h-screen w-full grid-cols-20 grid-rows-3 overflow-hidden text-black/10">
+    <section className="absolute inset-0 z-0 grid h-full w-full grid-cols-20 grid-rows-3 overflow-hidden text-black/10">
       <BackgroundYears />
 
       <div className="col-span-20 row-span-1 row-start-3 mt-8 self-start justify-self-center px-4 text-black sm:mt-14 lg:mt-20">
@@ -211,16 +223,25 @@ function HeroImage({
     <div
       ref={heroImageRef}
       data-header-theme="dark"
-      className="relative z-40 grid h-[100svh] w-full scale-30 transform-gpu grid-cols-1 grid-rows-2 overflow-hidden bg-black px-6 py-8 will-change-transform [backface-visibility:hidden] sm:scale-40 sm:px-10 sm:py-10 md:scale-45 lg:grid-cols-2 lg:px-16 lg:py-12"
+      className="relative z-40 grid h-full w-full grid-cols-1 grid-rows-2 overflow-hidden bg-black px-6 py-8 will-change-transform [backface-visibility:hidden] sm:px-10 sm:py-10 lg:grid-cols-2 lg:px-16 lg:py-12"
     >
-      <img
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[calc(50%+8vw)_center]"
-        decoding="async"
-        fetchPriority="high"
-        src={heroimage}
-      />
+      <picture className="pointer-events-none absolute inset-0">
+        <source
+          media="(max-width: 639px)"
+          srcSet="/AU090348-1600.webp"
+          type="image/webp"
+        />
+        <source srcSet="/AU090348-2560.webp" type="image/webp" />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-cover object-[calc(50%+8vw)_center]"
+          decoding="async"
+          fetchPriority="high"
+          loading="eager"
+          src="/AU090348-2560.jpg"
+        />
+      </picture>
 
       <div className="relative z-10 col-span-1 row-span-1 row-start-2 w-full self-end text-white">
         <h1 className="max-w-[12ch] text-4xl font-bold sm:text-5xl">

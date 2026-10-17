@@ -27,6 +27,7 @@ type StoryChapterData = {
 
 type F1AnimationTargets = {
   stage: HTMLElement | null
+  endMarker: HTMLElement | null
   masks: HTMLElement[]
   question: HTMLElement | null
   copyLabel: HTMLElement | null
@@ -114,20 +115,10 @@ const CHAPTERS = [
 const F1_REVEAL_ROW_COUNT = 5
 const F1_REVEAL_ROW_HEIGHT = 100 / F1_REVEAL_ROW_COUNT
 const F1_MASK_OVERLAP_PX = 2
-const MIN_MOBILE_SCROLL_END_BUFFER_PX = 120
 const STORY_IMAGE_SOURCES = [
   ...CHAPTERS.map(({ image }) => image),
   '/audi-r26-f1.jpg',
 ]
-
-const getMobileScrollEndBuffer = () => {
-  const viewportHeight = window.visualViewport?.height ?? window.innerHeight
-
-  return Math.max(
-    MIN_MOBILE_SCROLL_END_BUFFER_PX,
-    Math.round(viewportHeight * 0.15),
-  )
-}
 
 const CHAPTER_LAYOUTS: Record<
   ChapterLayout,
@@ -287,6 +278,7 @@ export default function SectionOne() {
         trackRef.current?.querySelector<T>(selector) ?? null
       const f1: F1AnimationTargets = {
         stage: select('[data-f1-stage]'),
+        endMarker: select('[data-f1-scroll-end]'),
         masks: gsap.utils.toArray<HTMLElement>(
           trackRef.current.querySelectorAll('[data-f1-mask]'),
         ),
@@ -460,12 +452,13 @@ export default function SectionOne() {
 
       revealController.revealOnScroll()
 
-      if (revealController.f1.stage) {
+      if (revealController.f1.stage && revealController.f1.endMarker) {
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: revealController.f1.stage,
+            endTrigger: revealController.f1.endMarker,
             start: 'top top',
-            end: () => `bottom bottom+=${getMobileScrollEndBuffer()}`,
+            end: 'top bottom',
             scrub: 0.35,
             invalidateOnRefresh: true,
           },
@@ -610,12 +603,18 @@ function StoryChapter({ chapter }: { chapter: StoryChapterData }) {
 function FinalChapter() {
   return (
     <article
-      className="relative h-[240svh] w-full shrink-0 bg-black text-white lg:h-full lg:w-screen"
+      className="relative h-[calc(100dvh+160svh)] w-full shrink-0 bg-black text-white lg:h-full lg:w-screen"
       data-header-theme="dark"
       data-f1-stage
       data-story-panel
     >
-      <div className="sticky top-0 flex h-[100svh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-[20svh] h-px lg:hidden"
+        data-f1-scroll-end
+      />
+
+      <div className="sticky top-0 flex h-[100dvh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
         <div className="relative z-40" data-f1-question>
           <WipeText
             as="h2"
