@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger)
+ScrollTrigger.config({ ignoreMobileResize: true })
 
 const BACKGROUND_YEARS = [
   {
@@ -38,6 +39,15 @@ export default function Hero() {
   const heroImageRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    const shouldUseSmoothScroll = window.matchMedia(
+      '(min-width: 1024px) and (pointer: fine)',
+    ).matches
+
+    if (!shouldUseSmoothScroll) {
+      ScrollTrigger.refresh()
+      return
+    }
+
     const lenis = new Lenis()
     const updateScrollTrigger = () => ScrollTrigger.update()
     const tick = (time: number) => lenis.raf(time * 1000)
@@ -59,6 +69,8 @@ export default function Hero() {
 
     gsap.from(heroImageRef.current, {
       scale: 1,
+      force3D: true,
+      transformOrigin: 'center center',
       ease: 'none',
       scrollTrigger: {
         trigger: heroImageRef.current,
@@ -70,7 +82,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative min-h-[150dvh] w-full bg-cover bg-center sm:min-h-[170dvh] lg:min-h-[200dvh]">
+    <section className="relative min-h-[150svh] w-full sm:min-h-[170svh] lg:min-h-[200svh]">
       <div className="w-full sticky top-0" data-header-theme="light">
         <HeroImage heroImageRef={heroImageRef} />
         <BackgroundText />
@@ -199,13 +211,18 @@ function HeroImage({
     <div
       ref={heroImageRef}
       data-header-theme="dark"
-      className="relative z-40 grid min-h-screen w-full scale-30 md:scale-45 grid-cols-1 grid-rows-2 bg-black bg-auto bg-position-[calc(50%+8vw)_center] bg-no-repeat px-6 py-8 sm:scale-40 sm:px-10 sm:py-10 lg:grid-cols-2 lg:px-16 lg:py-12"
-      style={{
-        backgroundImage: `url(${heroimage})`,
-        backgroundSize: 'cover',
-      }}
+      className="relative z-40 grid h-[100svh] w-full scale-30 transform-gpu grid-cols-1 grid-rows-2 overflow-hidden bg-black px-6 py-8 will-change-transform [backface-visibility:hidden] sm:scale-40 sm:px-10 sm:py-10 md:scale-45 lg:grid-cols-2 lg:px-16 lg:py-12"
     >
-      <div className="col-span-1 row-span-1 row-start-2 w-full self-end text-white">
+      <img
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[calc(50%+8vw)_center]"
+        decoding="async"
+        fetchPriority="high"
+        src={heroimage}
+      />
+
+      <div className="relative z-10 col-span-1 row-span-1 row-start-2 w-full self-end text-white">
         <h1 className="max-w-[12ch] text-4xl font-bold sm:text-5xl">
           A LEGACY FORGED IN COMPETITION<span className="text-red-500">.</span>
         </h1>
@@ -223,7 +240,7 @@ function HeroImage({
 
 function ScrollIndicator() {
   return (
-    <div className="col-span-1 row-span-1 row-start-2 hidden flex-col items-center self-end justify-self-end text-white sm:flex lg:col-start-2">
+    <div className="relative z-10 col-span-1 row-span-1 row-start-2 hidden flex-col items-center self-end justify-self-end text-white sm:flex lg:col-start-2">
       <p className="text-xs uppercase tracking-widest font-jetbrains">SCROLL</p>
       <div className="h-3" />
       <div className="w-px h-15 bg-white" />

@@ -114,10 +114,20 @@ const CHAPTERS = [
 const F1_REVEAL_ROW_COUNT = 5
 const F1_REVEAL_ROW_HEIGHT = 100 / F1_REVEAL_ROW_COUNT
 const F1_MASK_OVERLAP_PX = 2
+const MIN_MOBILE_SCROLL_END_BUFFER_PX = 120
 const STORY_IMAGE_SOURCES = [
   ...CHAPTERS.map(({ image }) => image),
   '/audi-r26-f1.jpg',
 ]
+
+const getMobileScrollEndBuffer = () => {
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+
+  return Math.max(
+    MIN_MOBILE_SCROLL_END_BUFFER_PX,
+    Math.round(viewportHeight * 0.15),
+  )
+}
 
 const CHAPTER_LAYOUTS: Record<
   ChapterLayout,
@@ -455,7 +465,7 @@ export default function SectionOne() {
           scrollTrigger: {
             trigger: revealController.f1.stage,
             start: 'top top',
-            end: 'bottom bottom',
+            end: () => `bottom bottom+=${getMobileScrollEndBuffer()}`,
             scrub: 0.35,
             invalidateOnRefresh: true,
           },
