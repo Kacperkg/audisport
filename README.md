@@ -1,6 +1,6 @@
 # AudiSport
 
-AudiSport is an editorial React experience exploring Audi's motorsport history.
+AudiSport is a React experience exploring Audi's motorsport history.
 It is built as a frontend showcase: responsive typography, scroll-linked
 storytelling, smooth scrolling, animated text reveals, and an adaptive fixed
 header are combined into a cinematic single-page index.
