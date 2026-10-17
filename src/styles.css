@@ -1,84 +1,81 @@
-
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 /* Local fonts in /public/fonts */
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Hairline.otf') format('opentype');
-    font-weight: 100;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Hairline.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-HairlineItalic.otf') format('opentype');
-    font-weight: 100;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-HairlineItalic.otf') format('opentype');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Light.otf') format('opentype');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-LightItalic.otf') format('opentype');
-    font-weight: 300;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-LightItalic.otf') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Regular.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Italic.otf') format('opentype');
-    font-weight: 400;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Semibold.otf') format('opentype');
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-SemiboldItalic.otf') format('opentype');
-    font-weight: 600;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-SemiboldItalic.otf') format('opentype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-Extrabold.otf') format('opentype');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-Extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
 }
 @font-face {
-    font-family: 'PP Neue Montreal';
-    src: url('/fonts/PPNeueMontreal-ExtraboldItalic.otf') format('opentype');
-    font-weight: 800;
-    font-style: italic;
-    font-display: swap;
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/PPNeueMontreal-ExtraboldItalic.otf') format('opentype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
 }
 
-
-
-*{
+* {
   box-sizing: border-box;
 }
 
@@ -92,55 +89,107 @@ body {
   margin: 0;
   color: black;
   background-color: black;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
-
 .logo {
-    width: 280px;
-    height: 100px;
-} 
+  width: 280px;
+  height: 100px;
+}
 
 .logo div {
-    position: absolute;
+  position: absolute;
 }
 
 .logo .c1 {
-    margin-left: 0;
+  margin-left: 0;
 }
 
 .logo .c2 {
-    margin-left: 60px;
+  margin-left: 60px;
 }
 
 .logo .c3 {
-    margin-left: 120px;
+  margin-left: 120px;
 }
 
 .logo .c4 {
-    margin-left: 180px;
+  margin-left: 180px;
 }
 
 .circle {
-    width: 100px;
-    height: 100px;
-    margin: auto;
-    border-radius: 50%;
-    box-shadow:
-        inset 0 0 0 10px black;
-    transform-origin: center;
+  width: 100px;
+  height: 100px;
+  margin: auto;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 10px black;
+  transform-origin: center;
 }
 
 @layer utilities {
   .font-inter {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
   }
 
   .font-jetbrains {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Liberation Mono', 'Courier New', monospace;
+    font-family:
+      'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+      'Liberation Mono', 'Courier New', monospace;
   }
 
   .font-pp {
     font-family: var(--font-pp);
+  }
+}
+
+@keyframes hero-native-scale {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(var(--hero-end-scale));
+  }
+}
+
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  @supports (-webkit-touch-callout: none) and (animation-timeline: view()) {
+    .hero-scroll-stage {
+      view-timeline-name: --hero-scroll;
+      view-timeline-axis: block;
+    }
+
+    .hero-scale-target {
+      --hero-end-scale: 0.3;
+      animation: hero-native-scale linear both;
+      animation-timeline: --hero-scroll;
+      animation-range: contain 0% contain 100%;
+      backface-visibility: visible;
+      will-change: auto;
+    }
+
+    @media (min-width: 640px) {
+      .hero-scale-target {
+        --hero-end-scale: 0.4;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .hero-scale-target {
+        --hero-end-scale: 0.45;
+      }
+    }
   }
 }

@@ -67,6 +67,16 @@ export default function Hero() {
   useGSAP(() => {
     if (!heroSectionRef.current || !heroImageRef.current) return
 
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    const supportsNativeWebKitScrollAnimation =
+      window.matchMedia('(max-width: 1023px)').matches &&
+      CSS.supports('-webkit-touch-callout', 'none') &&
+      CSS.supports('animation-timeline', 'view()')
+
+    if (prefersReducedMotion || supportsNativeWebKitScrollAnimation) return
+
     gsap.fromTo(
       heroImageRef.current,
       { scale: 1 },
@@ -93,7 +103,7 @@ export default function Hero() {
   return (
     <section
       ref={heroSectionRef}
-      className="relative min-h-[calc(100dvh+50svh)] w-full sm:min-h-[calc(100dvh+70svh)] lg:min-h-[200dvh]"
+      className="hero-scroll-stage relative min-h-[calc(100dvh+50svh)] w-full sm:min-h-[calc(100dvh+70svh)] lg:min-h-[200dvh]"
     >
       <div className="sticky top-0 h-[100dvh] w-full" data-header-theme="light">
         <HeroImage heroImageRef={heroImageRef} />
@@ -223,7 +233,7 @@ function HeroImage({
     <div
       ref={heroImageRef}
       data-header-theme="dark"
-      className="relative z-40 grid h-full w-full grid-cols-1 grid-rows-2 overflow-hidden bg-black px-6 py-8 will-change-transform [backface-visibility:hidden] sm:px-10 sm:py-10 lg:grid-cols-2 lg:px-16 lg:py-12"
+      className="hero-scale-target relative z-40 grid h-full w-full grid-cols-1 grid-rows-2 overflow-hidden bg-black px-6 py-8 will-change-transform [backface-visibility:hidden] sm:px-10 sm:py-10 lg:grid-cols-2 lg:px-16 lg:py-12"
     >
       <picture className="pointer-events-none absolute inset-0">
         <source
