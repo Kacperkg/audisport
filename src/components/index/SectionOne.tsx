@@ -2,7 +2,7 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { ReactNode } from 'react'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -17,6 +17,8 @@ const CHAPTERS = [
       'It was not just traction. It was a new way to carry speed, rotate a car, and attack terrain that had previously belonged to compromise.',
     note: 'Group B rewrote the rules.',
     layout: 'split-right',
+    image: '/audi-quattro-1980-bw.webp',
+    imageAlt: 'The original Audi quattro displayed at its 1980 debut',
   },
   {
     year: '1987',
@@ -27,6 +29,8 @@ const CHAPTERS = [
       'The climb turned quattro into theatre: altitude, dust, boost and bravery compressed into one brutal ascent.',
     note: '14,115 ft above sea level.',
     layout: 'image-left',
+    image: '/audi-pikes-peak-1987-bw.webp',
+    imageAlt: 'Walter Röhrl driving the Audi Sport quattro S1 at Pikes Peak',
   },
   {
     year: '1990s',
@@ -37,6 +41,8 @@ const CHAPTERS = [
       'The surfaces changed, but the idea remained the same: make technology invisible by making the car feel inevitable.',
     note: 'From stages to circuits.',
     layout: 'centered',
+    image: '/audi-touring-1990s-bw.webp',
+    imageAlt: 'Hans-Joachim Stuck in the Audi V8 quattro touring car',
   },
   {
     year: '2000-2014',
@@ -47,6 +53,8 @@ const CHAPTERS = [
       'Speed mattered, but so did silence, rhythm and repeatability. Audi made endurance feel engineered down to the second.',
     note: '13 victories at Le Mans.',
     layout: 'wide-image',
+    image: '/audi-le-mans-2013-bw.webp',
+    imageAlt: 'Audi R18 e-tron quattro race cars at the 24 Hours of Le Mans',
   },
   {
     year: '2024',
@@ -57,24 +65,46 @@ const CHAPTERS = [
       'Dakar demanded a different kind of answer: range, recovery, heat and control across a landscape that refused certainty.',
     note: 'Electrified performance, off road.',
     layout: 'offset',
-  },
-  {
-    year: 'Today',
-    title: 'A New Chapter',
-    subtitle: 'Every legacy looks forward.',
-    copy: 'Audi’s motorsport story is not ending. It is moving into its most ambitious era yet.',
-    detail:
-      'The thread is still the same: take a difficult brief, make the technology matter, then let the stopwatch decide.',
-    note: 'The story keeps moving.',
-    layout: 'split-right',
+    image: '/audi-dakar-2024-bw.webp',
+    imageAlt: 'The Audi RS Q e-tron Dakar prototype on display',
   },
 ]
 
-const STORY_PANEL_COUNT = CHAPTERS.length + 2
+const F1_REVEAL_ROWS = 5
+const STORY_IMAGE_SOURCES = [
+  ...CHAPTERS.map(({ image }) => image),
+  '/audi-r26-f1.jpg',
+]
 
 export default function SectionOne() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const preloadStoryImages = async () => {
+      for (const source of STORY_IMAGE_SOURCES) {
+        if (cancelled) return
+
+        const image = new Image()
+        image.decoding = 'async'
+        image.src = source
+
+        try {
+          await image.decode()
+        } catch {
+          // The visible image can still load normally if decoding is interrupted.
+        }
+      }
+    }
+
+    void preloadStoryImages()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return
@@ -99,11 +129,43 @@ export default function SectionOne() {
       const redBlocks = gsap.utils.toArray<HTMLElement>(
         trackRef.current.querySelectorAll('[data-red-block]'),
       )
+      const f1Reveal =
+        trackRef.current.querySelector<HTMLElement>('[data-f1-reveal]')
+      const f1Rows = gsap.utils.toArray<HTMLElement>(
+        trackRef.current.querySelectorAll('[data-f1-row]'),
+      )
+      const f1CopyLabel = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-copy-label]',
+      )
+      const f1CopyOverlay = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-copy-overlay]',
+      )
+      const f1CopyRule = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-copy-rule]',
+      )
+      const f1TitleContent = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-title-content]',
+      )
+      const f1TitleWipe = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-title-wipe]',
+      )
+      const f1CopySupport = trackRef.current.querySelector<HTMLElement>(
+        '[data-f1-copy-support]',
+      )
       const revealedItems = new Set<HTMLElement>()
 
       gsap.set(textContents, { opacity: 0 })
       gsap.set(textWipes, { scaleX: 0, transformOrigin: 'left center' })
-      gsap.set(redBlocks, { opacity: 0, scale: 0, transformOrigin: 'center' })
+      gsap.set(redBlocks, { opacity: 0, y: 24 })
+      gsap.set(f1Rows, {
+        height: '0%',
+        transformOrigin: 'bottom center',
+      })
+      gsap.set([f1CopyLabel, f1CopySupport], { opacity: 0, y: 14 })
+      gsap.set(f1CopyOverlay, { visibility: 'hidden' })
+      gsap.set(f1CopyRule, { scaleX: 0, transformOrigin: 'left center' })
+      gsap.set(f1TitleContent, { opacity: 0 })
+      gsap.set(f1TitleWipe, { scaleX: 0, transformOrigin: 'left center' })
 
       const getTrackOffset = (element: HTMLElement) => {
         let offset = 0
@@ -152,9 +214,10 @@ export default function SectionOne() {
         if (item.dataset.redBlock !== undefined) {
           gsap.to(item, {
             opacity: 1,
-            scale: 1,
-            duration: 0.65,
-            ease: 'power3.out',
+            y: 0,
+            duration: 0.5,
+            ease: 'power2.out',
+            overwrite: 'auto',
           })
           return
         }
@@ -162,9 +225,11 @@ export default function SectionOne() {
         revealTextItem(item)
       }
 
-      const revealActiveItems = (progress: number) => {
-        const scrollDistance = getScrollDistance()
-        const revealPoint = progress * scrollDistance + window.innerWidth * 0.75
+      const revealActiveItems = () => {
+        const trackPosition = Math.abs(
+          Number(gsap.getProperty(trackRef.current, 'x')),
+        )
+        const revealPoint = trackPosition + window.innerWidth * 0.75
 
         ;[...revealItems, ...redBlocks].forEach((item) => {
           if (revealPoint >= getTrackOffset(item)) {
@@ -184,7 +249,19 @@ export default function SectionOne() {
         })
       }
 
-      return { revealActiveItems, revealItem, revealOnScroll }
+      return {
+        f1Reveal,
+        f1Rows,
+        f1CopyLabel,
+        f1CopyOverlay,
+        f1CopyRule,
+        f1CopySupport,
+        f1TitleContent,
+        f1TitleWipe,
+        revealActiveItems,
+        revealItem,
+        revealOnScroll,
+      }
     }
 
     media.add('(min-width: 1024px)', () => {
@@ -195,13 +272,13 @@ export default function SectionOne() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top top',
-          end: () => `+=${getScrollDistance()}`,
+          end: () => `+=${getScrollDistance() + window.innerHeight}`,
           pin: true,
           scrub: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          onRefresh: () => revealController.revealActiveItems(0),
-          onUpdate: (self) => revealController.revealActiveItems(self.progress),
+          onRefresh: revealController.revealActiveItems,
+          onUpdate: revealController.revealActiveItems,
         },
       })
 
@@ -210,10 +287,58 @@ export default function SectionOne() {
         {
           x: () => -getScrollDistance(),
           ease: 'none',
-          duration: STORY_PANEL_COUNT - 1,
+          duration: getScrollDistance,
         },
         0,
       )
+
+      timeline.to(revealController.f1Rows, {
+        height: '100%',
+        duration: window.innerHeight * 0.42,
+        ease: 'power3.inOut',
+        stagger: {
+          each: window.innerHeight * 0.07,
+          from: 'end',
+        },
+      })
+
+      timeline
+        .set(revealController.f1CopyOverlay, { visibility: 'visible' })
+        .to(revealController.f1CopyRule, {
+          scaleX: 1,
+          duration: window.innerHeight * 0.05,
+          ease: 'power2.out',
+        })
+        .to(
+          revealController.f1CopyLabel,
+          {
+            opacity: 1,
+            y: 0,
+            duration: window.innerHeight * 0.06,
+            ease: 'power2.out',
+          },
+          '<',
+        )
+        .to(revealController.f1TitleWipe, {
+          scaleX: 1,
+          duration: window.innerHeight * 0.06,
+          ease: 'power3.inOut',
+        })
+        .set(revealController.f1TitleContent, { opacity: 1 })
+        .set(revealController.f1TitleWipe, {
+          transformOrigin: 'right center',
+        })
+        .to(revealController.f1TitleWipe, {
+          scaleX: 0,
+          duration: window.innerHeight * 0.08,
+          ease: 'power3.inOut',
+        })
+        .to(revealController.f1CopySupport, {
+          opacity: 1,
+          y: 0,
+          duration: window.innerHeight * 0.05,
+          ease: 'power2.out',
+        })
     })
 
     media.add('(max-width: 1023px)', () => {
@@ -225,6 +350,54 @@ export default function SectionOne() {
       }
 
       revealController.revealOnScroll()
+
+      if (revealController.f1Reveal) {
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: revealController.f1Reveal,
+              start: 'top 80%',
+              end: 'top 10%',
+              scrub: true,
+            },
+          })
+          .to(revealController.f1Rows, {
+            height: '100%',
+            duration: 0.7,
+            ease: 'power3.inOut',
+            stagger: {
+              each: 0.08,
+              from: 'end',
+            },
+          })
+          .set(revealController.f1CopyOverlay, { visibility: 'visible' })
+          .to(revealController.f1CopyRule, {
+            scaleX: 1,
+            duration: 0.08,
+          })
+          .to(
+            revealController.f1CopyLabel,
+            { opacity: 1, y: 0, duration: 0.1 },
+            '<',
+          )
+          .to(revealController.f1TitleWipe, {
+            scaleX: 1,
+            duration: 0.1,
+          })
+          .set(revealController.f1TitleContent, { opacity: 1 })
+          .set(revealController.f1TitleWipe, {
+            transformOrigin: 'right center',
+          })
+          .to(revealController.f1TitleWipe, {
+            scaleX: 0,
+            duration: 0.12,
+          })
+          .to(revealController.f1CopySupport, {
+            opacity: 1,
+            y: 0,
+            duration: 0.1,
+          })
+      }
 
       const firstPanelItems = gsap.utils.toArray<HTMLElement>(
         trackRef.current?.querySelectorAll(
@@ -252,8 +425,8 @@ export default function SectionOne() {
         className="flex w-full flex-col lg:h-full lg:w-max lg:flex-row"
       >
         <IntroPanel />
-        {CHAPTERS.map((chapter, index) => (
-          <StoryChapter key={chapter.title} chapter={chapter} index={index} />
+        {CHAPTERS.map((chapter) => (
+          <StoryChapter key={chapter.title} chapter={chapter} />
         ))}
         <FinalChapter />
       </div>
@@ -272,14 +445,10 @@ function IntroPanel() {
         Scroll to begin
       </p>
       <div className="text-center">
-        <h1
-          className="font-jetbrains text-xs uppercase tracking-[0.35em] text-white/40"
-        >
+        <h1 className="font-jetbrains text-xs uppercase tracking-[0.35em] text-white/40">
           Audi Motorsport
         </h1>
-        <h1
-          className="mt-8 max-w-[12ch] text-5xl font-black uppercase leading-[0.86] tracking-tight text-white sm:text-7xl lg:text-8xl"
-        >
+        <h1 className="mt-8 max-w-[12ch] text-5xl font-black uppercase leading-[0.86] tracking-tight text-white sm:text-7xl lg:text-8xl">
           Where it all started<span className="text-red-500">.</span>
         </h1>
       </div>
@@ -287,13 +456,7 @@ function IntroPanel() {
   )
 }
 
-function StoryChapter({
-  chapter,
-  index,
-}: {
-  chapter: (typeof CHAPTERS)[number]
-  index: number
-}) {
+function StoryChapter({ chapter }: { chapter: (typeof CHAPTERS)[number] }) {
   const isImageLeft = chapter.layout === 'image-left'
   const isCentered = chapter.layout === 'centered'
   const isWideImage = chapter.layout === 'wide-image'
@@ -357,7 +520,7 @@ function StoryChapter({
           isCentered
             ? 'items-end lg:col-span-9 lg:col-start-2 lg:row-start-1 lg:pb-14'
             : isImageLeft
-              ? 'items-center lg:col-span-5 lg:col-start-2'
+              ? 'items-center lg:col-span-5 lg:col-start-2 lg:-translate-y-24'
               : isWideImage
                 ? 'items-end lg:col-span-6 lg:col-start-7 lg:pb-20'
                 : isOffset
@@ -366,7 +529,7 @@ function StoryChapter({
         }`}
       >
         <div
-          className={`bg-red-600/90 ${
+          className={`overflow-hidden bg-red-600/90 ${
             isCentered
               ? 'h-[26vh] w-full lg:h-[18vh]'
               : isWideImage
@@ -376,7 +539,15 @@ function StoryChapter({
                   : 'h-[42vh] w-full lg:h-[66vh]'
           }`}
           data-red-block
-        />
+        >
+          <img
+            alt={chapter.imageAlt}
+            className="h-full w-full object-cover"
+            decoding="async"
+            loading="eager"
+            src={chapter.image}
+          />
+        </div>
       </div>
     </article>
   )
@@ -397,6 +568,70 @@ function FinalChapter() {
         >
           What's next<span className="text-red-500">?</span>
         </WipeText>
+      </div>
+      <div className="absolute inset-0 z-20" data-f1-reveal>
+        <span className="sr-only">
+          Audi R26 Formula 1 car in its special 2026 Singapore livery
+        </span>
+        {Array.from({ length: F1_REVEAL_ROWS }, (_, index) => (
+          <div
+            key={index}
+            aria-hidden="true"
+            className="absolute inset-x-0 h-1/5 overflow-hidden"
+            style={{ top: `${index * 20}%` }}
+          >
+            <div
+              className="absolute inset-x-0 bottom-0 overflow-hidden"
+              data-f1-row
+              data-header-theme="light"
+            >
+              <img
+                alt=""
+                className="pointer-events-none absolute left-0 h-[100dvh] w-full max-w-none object-cover object-center"
+                decoding="async"
+                src="/audi-r26-f1.jpg"
+                style={{ bottom: `${-(F1_REVEAL_ROWS - index - 1) * 20}dvh` }}
+              />
+            </div>
+          </div>
+        ))}
+
+        <div
+          className="absolute inset-0 z-30 text-left text-black"
+          data-f1-copy-overlay
+          data-header-theme="light"
+        >
+          <div className="absolute left-6 top-28 sm:left-10 sm:top-32 lg:left-20">
+            <div className="h-px w-16 bg-red-600 sm:w-24" data-f1-copy-rule />
+            <p
+              className="font-jetbrains mt-4 text-[10px] font-semibold uppercase leading-5 tracking-[0.24em] sm:text-xs"
+              data-f1-copy-label
+            >
+              The next chapter
+              <br />
+              Formula 1 / 2026
+            </p>
+          </div>
+
+          <div className="absolute bottom-10 left-6 sm:bottom-12 sm:left-10 lg:bottom-16 lg:left-20">
+            <h2 className="relative inline-block overflow-hidden text-7xl font-black uppercase leading-[0.78] tracking-[-0.06em] sm:text-9xl lg:text-[10rem]">
+              <span data-f1-title-content>
+                R26<span className="text-red-600">.</span>
+              </span>
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 z-10 origin-left scale-x-0 bg-black"
+                data-f1-title-wipe
+              />
+            </h2>
+            <p
+              className="font-jetbrains mt-5 text-[10px] font-semibold uppercase tracking-[0.26em] sm:text-xs"
+              data-f1-copy-support
+            >
+              Built to challenge.
+            </p>
+          </div>
+        </div>
       </div>
     </article>
   )
