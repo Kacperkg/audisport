@@ -3,9 +3,50 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
-import { motion } from 'motion/react'
 
 gsap.registerPlugin(ScrollTrigger)
+
+type ChapterLayout =
+  | 'split-right'
+  | 'image-left'
+  | 'centered'
+  | 'wide-image'
+  | 'offset'
+
+type StoryChapterData = {
+  year: string
+  title: string
+  subtitle: string
+  copy: string
+  detail: string
+  note: string
+  layout: ChapterLayout
+  image: string
+  imageAlt: string
+}
+
+type F1AnimationTargets = {
+  stage: HTMLElement | null
+  masks: HTMLElement[]
+  question: HTMLElement | null
+  copyLabel: HTMLElement | null
+  copyOverlay: HTMLElement | null
+  copyRule: HTMLElement | null
+  copySupport: HTMLElement | null
+  titleContent: HTMLElement | null
+  titleWipe: HTMLElement | null
+}
+
+type F1AnimationDurations = {
+  question: number
+  masks: number
+  maskStagger: number
+  rule: number
+  label: number
+  titleIn: number
+  titleOut: number
+  support: number
+}
 
 const CHAPTERS = [
   {
@@ -68,22 +109,118 @@ const CHAPTERS = [
     image: '/audi-dakar-2024-bw.webp',
     imageAlt: 'The Audi RS Q e-tron Dakar prototype on display',
   },
-]
+] satisfies ReadonlyArray<StoryChapterData>
 
-const F1_REVEAL_ROWS = 5
+const F1_REVEAL_ROW_COUNT = 5
+const F1_REVEAL_ROW_HEIGHT = 100 / F1_REVEAL_ROW_COUNT
+const F1_MASK_OVERLAP_PX = 2
 const STORY_IMAGE_SOURCES = [
   ...CHAPTERS.map(({ image }) => image),
   '/audi-r26-f1.jpg',
 ]
 
-export default function SectionOne() {
-  const sectionRef = useRef<HTMLElement | null>(null)
-  const trackRef = useRef<HTMLDivElement | null>(null)
+const CHAPTER_LAYOUTS: Record<
+  ChapterLayout,
+  { year: string; copy: string; image: string; imageFrame: string }
+> = {
+  'split-right': {
+    year: 'left-6 top-12 lg:left-20',
+    copy: 'lg:col-span-4 lg:col-start-2',
+    image: 'items-center lg:col-span-5 lg:col-start-8',
+    imageFrame: 'h-[42vh] w-full lg:h-[66vh]',
+  },
+  'image-left': {
+    year: 'right-6 top-14 lg:right-24',
+    copy: 'lg:col-span-4 lg:col-start-8',
+    image: 'items-center lg:col-span-5 lg:col-start-2 lg:-translate-y-24',
+    imageFrame: 'h-[42vh] w-full lg:h-[66vh]',
+  },
+  centered: {
+    year: 'left-6 top-12 lg:left-20',
+    copy: 'lg:col-span-5 lg:col-start-5 lg:items-center lg:text-center',
+    image: 'items-end lg:col-span-9 lg:col-start-2 lg:row-start-1 lg:pb-14',
+    imageFrame: 'h-[26vh] w-full lg:h-[18vh]',
+  },
+  'wide-image': {
+    year: 'left-6 top-12 lg:left-20',
+    copy: 'lg:col-span-4 lg:col-start-2',
+    image: 'items-end lg:col-span-6 lg:col-start-7 lg:pb-20',
+    imageFrame: 'h-[34vh] w-full lg:h-[42vh]',
+  },
+  offset: {
+    year: 'left-6 top-12 lg:left-20',
+    copy: 'lg:col-span-4 lg:col-start-2 lg:justify-end lg:pb-24',
+    image: 'items-start lg:col-span-5 lg:col-start-8 lg:pt-24',
+    imageFrame: 'h-[42vh] w-[74%] lg:h-[52vh]',
+  },
+}
 
+function appendF1RevealAnimation(
+  timeline: gsap.core.Timeline,
+  targets: F1AnimationTargets,
+  durations: F1AnimationDurations,
+  questionOffset: number,
+) {
+  timeline
+    .to(targets.question, {
+      opacity: 0,
+      y: questionOffset,
+      duration: durations.question,
+      ease: 'power2.inOut',
+    })
+    .to(
+      targets.masks,
+      {
+        scaleY: 0,
+        duration: durations.masks,
+        ease: 'power3.inOut',
+        stagger: { each: durations.maskStagger, from: 'end' },
+      },
+      '<',
+    )
+    .set(targets.copyOverlay, { visibility: 'visible' })
+    .to(targets.copyRule, {
+      scaleX: 1,
+      duration: durations.rule,
+      ease: 'power2.out',
+    })
+    .to(
+      targets.copyLabel,
+      {
+        opacity: 1,
+        y: 0,
+        duration: durations.label,
+        ease: 'power2.out',
+      },
+      '<',
+    )
+    .to(targets.titleWipe, {
+      scaleX: 1,
+      duration: durations.titleIn,
+      ease: 'power3.inOut',
+    })
+    .set(targets.titleContent, { opacity: 1 })
+    .set(targets.titleWipe, { transformOrigin: 'right center' })
+    .to(targets.titleWipe, {
+      scaleX: 0,
+      duration: durations.titleOut,
+      ease: 'power3.inOut',
+    })
+    .to(targets.copySupport, {
+      opacity: 1,
+      y: 0,
+      duration: durations.support,
+      ease: 'power2.out',
+    })
+}
+
+function useStoryImagePreload() {
   useEffect(() => {
+    if (!window.matchMedia('(min-width: 1024px)').matches) return
+
     let cancelled = false
 
-    const preloadStoryImages = async () => {
+    const preloadImages = async () => {
       for (const source of STORY_IMAGE_SOURCES) {
         if (cancelled) return
 
@@ -94,17 +231,24 @@ export default function SectionOne() {
         try {
           await image.decode()
         } catch {
-          // The visible image can still load normally if decoding is interrupted.
+          // The visible image remains the fallback if pre-decoding is interrupted.
         }
       }
     }
 
-    void preloadStoryImages()
+    void preloadImages()
 
     return () => {
       cancelled = true
     }
   }, [])
+}
+
+export default function SectionOne() {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const trackRef = useRef<HTMLDivElement | null>(null)
+
+  useStoryImagePreload()
 
   useGSAP(() => {
     if (!sectionRef.current || !trackRef.current) return
@@ -126,46 +270,41 @@ export default function SectionOne() {
       const textWipes = gsap.utils.toArray<HTMLSpanElement>(
         trackRef.current.querySelectorAll('[data-text-wipe]'),
       )
-      const redBlocks = gsap.utils.toArray<HTMLElement>(
-        trackRef.current.querySelectorAll('[data-red-block]'),
+      const storyImages = gsap.utils.toArray<HTMLElement>(
+        trackRef.current.querySelectorAll('[data-story-image]'),
       )
-      const f1Reveal =
-        trackRef.current.querySelector<HTMLElement>('[data-f1-reveal]')
-      const f1Rows = gsap.utils.toArray<HTMLElement>(
-        trackRef.current.querySelectorAll('[data-f1-row]'),
-      )
-      const f1CopyLabel = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-copy-label]',
-      )
-      const f1CopyOverlay = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-copy-overlay]',
-      )
-      const f1CopyRule = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-copy-rule]',
-      )
-      const f1TitleContent = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-title-content]',
-      )
-      const f1TitleWipe = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-title-wipe]',
-      )
-      const f1CopySupport = trackRef.current.querySelector<HTMLElement>(
-        '[data-f1-copy-support]',
-      )
+      const select = <T extends HTMLElement>(selector: string) =>
+        trackRef.current?.querySelector<T>(selector) ?? null
+      const f1: F1AnimationTargets = {
+        stage: select('[data-f1-stage]'),
+        masks: gsap.utils.toArray<HTMLElement>(
+          trackRef.current.querySelectorAll('[data-f1-mask]'),
+        ),
+        question: select('[data-f1-question]'),
+        copyLabel: select('[data-f1-copy-label]'),
+        copyOverlay: select('[data-f1-copy-overlay]'),
+        copyRule: select('[data-f1-copy-rule]'),
+        copySupport: select('[data-f1-copy-support]'),
+        titleContent: select('[data-f1-title-content]'),
+        titleWipe: select('[data-f1-title-wipe]'),
+      }
       const revealedItems = new Set<HTMLElement>()
 
       gsap.set(textContents, { opacity: 0 })
       gsap.set(textWipes, { scaleX: 0, transformOrigin: 'left center' })
-      gsap.set(redBlocks, { opacity: 0, y: 24 })
-      gsap.set(f1Rows, {
-        height: '0%',
-        transformOrigin: 'bottom center',
+      gsap.set(storyImages, { opacity: 0, y: 24 })
+      gsap.set(f1.masks, {
+        scaleY: 1,
+        transformOrigin: 'top center',
       })
-      gsap.set([f1CopyLabel, f1CopySupport], { opacity: 0, y: 14 })
-      gsap.set(f1CopyOverlay, { visibility: 'hidden' })
-      gsap.set(f1CopyRule, { scaleX: 0, transformOrigin: 'left center' })
-      gsap.set(f1TitleContent, { opacity: 0 })
-      gsap.set(f1TitleWipe, { scaleX: 0, transformOrigin: 'left center' })
+      gsap.set([f1.copyLabel, f1.copySupport], { opacity: 0, y: 14 })
+      gsap.set(f1.copyOverlay, { visibility: 'hidden' })
+      gsap.set(f1.copyRule, { scaleX: 0, transformOrigin: 'left center' })
+      gsap.set(f1.titleContent, { opacity: 0 })
+      gsap.set(f1.titleWipe, {
+        scaleX: 0,
+        transformOrigin: 'left center',
+      })
 
       const getTrackOffset = (element: HTMLElement) => {
         let offset = 0
@@ -184,10 +323,8 @@ export default function SectionOne() {
           gsap.to(item, {
             opacity: 1,
             y: 0,
-            filter: 'blur(0px)',
-            clipPath: 'inset(0% 0% 0% 0%)',
-            duration: 0.65,
-            ease: 'power3.out',
+            duration: 0.5,
+            ease: 'power2.out',
           })
           return
         }
@@ -211,7 +348,7 @@ export default function SectionOne() {
 
         revealedItems.add(item)
 
-        if (item.dataset.redBlock !== undefined) {
+        if (item.dataset.storyImage !== undefined) {
           gsap.to(item, {
             opacity: 1,
             y: 0,
@@ -231,7 +368,7 @@ export default function SectionOne() {
         )
         const revealPoint = trackPosition + window.innerWidth * 0.75
 
-        ;[...revealItems, ...redBlocks].forEach((item) => {
+        ;[...revealItems, ...storyImages].forEach((item) => {
           if (revealPoint >= getTrackOffset(item)) {
             revealItem(item)
           }
@@ -239,7 +376,7 @@ export default function SectionOne() {
       }
 
       const revealOnScroll = () => {
-        ;[...revealItems, ...redBlocks].forEach((item) => {
+        ;[...revealItems, ...storyImages].forEach((item) => {
           ScrollTrigger.create({
             trigger: item,
             start: 'top 82%',
@@ -250,14 +387,7 @@ export default function SectionOne() {
       }
 
       return {
-        f1Reveal,
-        f1Rows,
-        f1CopyLabel,
-        f1CopyOverlay,
-        f1CopyRule,
-        f1CopySupport,
-        f1TitleContent,
-        f1TitleWipe,
+        f1,
         revealActiveItems,
         revealItem,
         revealOnScroll,
@@ -292,53 +422,22 @@ export default function SectionOne() {
         0,
       )
 
-      timeline.to(revealController.f1Rows, {
-        height: '100%',
-        duration: window.innerHeight * 0.42,
-        ease: 'power3.inOut',
-        stagger: {
-          each: window.innerHeight * 0.07,
-          from: 'end',
+      const viewportHeight = window.innerHeight
+      appendF1RevealAnimation(
+        timeline,
+        revealController.f1,
+        {
+          question: viewportHeight * 0.08,
+          masks: viewportHeight * 0.42,
+          maskStagger: viewportHeight * 0.07,
+          rule: viewportHeight * 0.05,
+          label: viewportHeight * 0.06,
+          titleIn: viewportHeight * 0.06,
+          titleOut: viewportHeight * 0.08,
+          support: viewportHeight * 0.05,
         },
-      })
-
-      timeline
-        .set(revealController.f1CopyOverlay, { visibility: 'visible' })
-        .to(revealController.f1CopyRule, {
-          scaleX: 1,
-          duration: window.innerHeight * 0.05,
-          ease: 'power2.out',
-        })
-        .to(
-          revealController.f1CopyLabel,
-          {
-            opacity: 1,
-            y: 0,
-            duration: window.innerHeight * 0.06,
-            ease: 'power2.out',
-          },
-          '<',
-        )
-        .to(revealController.f1TitleWipe, {
-          scaleX: 1,
-          duration: window.innerHeight * 0.06,
-          ease: 'power3.inOut',
-        })
-        .set(revealController.f1TitleContent, { opacity: 1 })
-        .set(revealController.f1TitleWipe, {
-          transformOrigin: 'right center',
-        })
-        .to(revealController.f1TitleWipe, {
-          scaleX: 0,
-          duration: window.innerHeight * 0.08,
-          ease: 'power3.inOut',
-        })
-        .to(revealController.f1CopySupport, {
-          opacity: 1,
-          y: 0,
-          duration: window.innerHeight * 0.05,
-          ease: 'power2.out',
-        })
+        -20,
+      )
     })
 
     media.add('(max-width: 1023px)', () => {
@@ -351,52 +450,32 @@ export default function SectionOne() {
 
       revealController.revealOnScroll()
 
-      if (revealController.f1Reveal) {
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: revealController.f1Reveal,
-              start: 'top 80%',
-              end: 'top 10%',
-              scrub: true,
-            },
-          })
-          .to(revealController.f1Rows, {
-            height: '100%',
-            duration: 0.7,
-            ease: 'power3.inOut',
-            stagger: {
-              each: 0.08,
-              from: 'end',
-            },
-          })
-          .set(revealController.f1CopyOverlay, { visibility: 'visible' })
-          .to(revealController.f1CopyRule, {
-            scaleX: 1,
-            duration: 0.08,
-          })
-          .to(
-            revealController.f1CopyLabel,
-            { opacity: 1, y: 0, duration: 0.1 },
-            '<',
-          )
-          .to(revealController.f1TitleWipe, {
-            scaleX: 1,
-            duration: 0.1,
-          })
-          .set(revealController.f1TitleContent, { opacity: 1 })
-          .set(revealController.f1TitleWipe, {
-            transformOrigin: 'right center',
-          })
-          .to(revealController.f1TitleWipe, {
-            scaleX: 0,
-            duration: 0.12,
-          })
-          .to(revealController.f1CopySupport, {
-            opacity: 1,
-            y: 0,
-            duration: 0.1,
-          })
+      if (revealController.f1.stage) {
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: revealController.f1.stage,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0.35,
+            invalidateOnRefresh: true,
+          },
+        })
+
+        appendF1RevealAnimation(
+          timeline,
+          revealController.f1,
+          {
+            question: 0.12,
+            masks: 0.64,
+            maskStagger: 0.08,
+            rule: 0.08,
+            label: 0.1,
+            titleIn: 0.1,
+            titleOut: 0.12,
+            support: 0.1,
+          },
+          -16,
+        )
       }
 
       const firstPanelItems = gsap.utils.toArray<HTMLElement>(
@@ -456,11 +535,8 @@ function IntroPanel() {
   )
 }
 
-function StoryChapter({ chapter }: { chapter: (typeof CHAPTERS)[number] }) {
-  const isImageLeft = chapter.layout === 'image-left'
-  const isCentered = chapter.layout === 'centered'
-  const isWideImage = chapter.layout === 'wide-image'
-  const isOffset = chapter.layout === 'offset'
+function StoryChapter({ chapter }: { chapter: StoryChapterData }) {
+  const layout = CHAPTER_LAYOUTS[chapter.layout]
 
   return (
     <article
@@ -469,25 +545,13 @@ function StoryChapter({ chapter }: { chapter: (typeof CHAPTERS)[number] }) {
       data-story-panel
     >
       <p
-        className={`pointer-events-none absolute font-jetbrains text-[32vw] font-black leading-none text-white/[0.035] lg:text-[20vw] ${
-          isImageLeft
-            ? 'right-6 top-14 lg:right-24'
-            : 'left-6 top-12 lg:left-20'
-        }`}
+        className={`pointer-events-none absolute font-jetbrains text-[32vw] font-black leading-none text-white/[0.035] lg:text-[20vw] ${layout.year}`}
       >
         {chapter.year}
       </p>
 
       <div
-        className={`relative z-10 flex flex-col justify-center ${
-          isCentered
-            ? 'lg:col-span-5 lg:col-start-5 lg:items-center lg:text-center'
-            : isImageLeft
-              ? 'lg:col-span-4 lg:col-start-8'
-              : isOffset
-                ? 'lg:col-span-4 lg:col-start-2 lg:justify-end lg:pb-24'
-                : 'lg:col-span-4 lg:col-start-2'
-        }`}
+        className={`relative z-10 flex flex-col justify-center ${layout.copy}`}
       >
         <WipeText className="font-jetbrains mb-8 flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-white/50 sm:text-[11px] sm:tracking-[0.28em]">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -515,36 +579,16 @@ function StoryChapter({ chapter }: { chapter: (typeof CHAPTERS)[number] }) {
         </SoftRevealText>
       </div>
 
-      <div
-        className={`relative flex ${
-          isCentered
-            ? 'items-end lg:col-span-9 lg:col-start-2 lg:row-start-1 lg:pb-14'
-            : isImageLeft
-              ? 'items-center lg:col-span-5 lg:col-start-2 lg:-translate-y-24'
-              : isWideImage
-                ? 'items-end lg:col-span-6 lg:col-start-7 lg:pb-20'
-                : isOffset
-                  ? 'items-start lg:col-span-5 lg:col-start-8 lg:pt-24'
-                  : 'items-center lg:col-span-5 lg:col-start-8'
-        }`}
-      >
+      <div className={`relative flex ${layout.image}`}>
         <div
-          className={`overflow-hidden bg-red-600/90 ${
-            isCentered
-              ? 'h-[26vh] w-full lg:h-[18vh]'
-              : isWideImage
-                ? 'h-[34vh] w-full lg:h-[42vh]'
-                : isOffset
-                  ? 'h-[42vh] w-[74%] lg:h-[52vh]'
-                  : 'h-[42vh] w-full lg:h-[66vh]'
-          }`}
-          data-red-block
+          className={`overflow-hidden ${layout.imageFrame}`}
+          data-story-image
         >
           <img
             alt={chapter.imageAlt}
             className="h-full w-full object-cover"
             decoding="async"
-            loading="eager"
+            loading="lazy"
             src={chapter.image}
           />
         </div>
@@ -556,80 +600,78 @@ function StoryChapter({ chapter }: { chapter: (typeof CHAPTERS)[number] }) {
 function FinalChapter() {
   return (
     <article
-      className="relative flex min-h-screen w-full shrink-0 items-center justify-center overflow-hidden bg-black px-6 py-28 text-center text-white sm:px-10 lg:h-full lg:w-screen lg:px-20 lg:py-0"
+      className="relative h-[240svh] w-full shrink-0 bg-black text-white lg:h-full lg:w-screen"
       data-header-theme="dark"
+      data-f1-stage
       data-story-panel
     >
-      <p className="absolute inset-x-0 top-12 font-jetbrains text-[16vw] font-black uppercase leading-none text-white/[0.035]"></p>
-      <div className="relative z-10">
-        <WipeText
-          as="h2"
-          className="text-5xl font-black uppercase tracking-tight text-white sm:text-7xl lg:text-8xl"
-        >
-          What's next<span className="text-red-500">?</span>
-        </WipeText>
-      </div>
-      <div className="absolute inset-0 z-20" data-f1-reveal>
-        <span className="sr-only">
-          Audi R26 Formula 1 car in its special 2026 Singapore livery
-        </span>
-        {Array.from({ length: F1_REVEAL_ROWS }, (_, index) => (
-          <div
-            key={index}
-            aria-hidden="true"
-            className="absolute inset-x-0 h-1/5 overflow-hidden"
-            style={{ top: `${index * 20}%` }}
+      <div className="sticky top-0 flex h-[100svh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
+        <div className="relative z-40" data-f1-question>
+          <WipeText
+            as="h2"
+            className="text-5xl font-black uppercase tracking-tight text-white sm:text-7xl lg:text-8xl"
           >
+            What's next<span className="text-red-500">?</span>
+          </WipeText>
+        </div>
+
+        <div className="absolute inset-0 z-20" data-f1-reveal>
+          <img
+            alt="Audi R26 Formula 1 car in its special 2026 Singapore livery"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+            decoding="async"
+            loading="lazy"
+            src="/audi-r26-f1.jpg"
+          />
+
+          {Array.from({ length: F1_REVEAL_ROW_COUNT }, (_, index) => (
             <div
-              className="absolute inset-x-0 bottom-0 overflow-hidden"
-              data-f1-row
-              data-header-theme="light"
-            >
-              <img
-                alt=""
-                className="pointer-events-none absolute left-0 h-[100dvh] w-full max-w-none object-cover object-center"
-                decoding="async"
-                src="/audi-r26-f1.jpg"
-                style={{ bottom: `${-(F1_REVEAL_ROWS - index - 1) * 20}dvh` }}
-              />
+              key={index}
+              aria-hidden="true"
+              className="absolute inset-x-0 origin-top bg-black will-change-transform [backface-visibility:hidden]"
+              data-f1-mask
+              style={{
+                height: `calc(${F1_REVEAL_ROW_HEIGHT}% + ${F1_MASK_OVERLAP_PX * 2}px)`,
+                top: `calc(${index * F1_REVEAL_ROW_HEIGHT}% - ${F1_MASK_OVERLAP_PX}px)`,
+              }}
+            />
+          ))}
+
+          <div
+            className="absolute inset-0 z-30 text-left text-black"
+            data-f1-copy-overlay
+            data-header-theme="light"
+          >
+            <div className="absolute left-6 top-28 sm:left-10 sm:top-32 lg:left-20">
+              <div className="h-px w-16 bg-red-600 sm:w-24" data-f1-copy-rule />
+              <p
+                className="font-jetbrains mt-4 text-[10px] font-semibold uppercase leading-5 tracking-[0.24em] sm:text-xs"
+                data-f1-copy-label
+              >
+                The next chapter
+                <br />
+                Formula 1 / 2026
+              </p>
             </div>
-          </div>
-        ))}
 
-        <div
-          className="absolute inset-0 z-30 text-left text-black"
-          data-f1-copy-overlay
-          data-header-theme="light"
-        >
-          <div className="absolute left-6 top-28 sm:left-10 sm:top-32 lg:left-20">
-            <div className="h-px w-16 bg-red-600 sm:w-24" data-f1-copy-rule />
-            <p
-              className="font-jetbrains mt-4 text-[10px] font-semibold uppercase leading-5 tracking-[0.24em] sm:text-xs"
-              data-f1-copy-label
-            >
-              The next chapter
-              <br />
-              Formula 1 / 2026
-            </p>
-          </div>
-
-          <div className="absolute bottom-10 left-6 sm:bottom-12 sm:left-10 lg:bottom-16 lg:left-20">
-            <h2 className="relative inline-block overflow-hidden text-7xl font-black uppercase leading-[0.78] tracking-[-0.06em] sm:text-9xl lg:text-[10rem]">
-              <span data-f1-title-content>
-                R26<span className="text-red-600">.</span>
-              </span>
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 z-10 origin-left scale-x-0 bg-black"
-                data-f1-title-wipe
-              />
-            </h2>
-            <p
-              className="font-jetbrains mt-5 text-[10px] font-semibold uppercase tracking-[0.26em] sm:text-xs"
-              data-f1-copy-support
-            >
-              Built to challenge.
-            </p>
+            <div className="absolute bottom-10 left-6 sm:bottom-12 sm:left-10 lg:bottom-16 lg:left-20">
+              <h2 className="relative inline-block overflow-hidden text-7xl font-black uppercase leading-[0.78] tracking-[-0.06em] sm:text-9xl lg:text-[10rem]">
+                <span data-f1-title-content>
+                  R26<span className="text-red-600">.</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 z-10 origin-left scale-x-0 bg-black"
+                  data-f1-title-wipe
+                />
+              </h2>
+              <p
+                className="font-jetbrains mt-5 text-[10px] font-semibold uppercase tracking-[0.26em] sm:text-xs"
+                data-f1-copy-support
+              >
+                Built to challenge.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -672,7 +714,7 @@ function SoftRevealText({
 }) {
   return (
     <Component
-      className={`translate-y-5 opacity-0 blur-sm [clip-path:inset(0_0_100%_0)] ${className}`}
+      className={`translate-y-5 opacity-0 ${className}`}
       data-reveal-type="soft"
       data-story-reveal-item
     >

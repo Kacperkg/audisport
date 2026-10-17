@@ -2,12 +2,6 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import type { RefObject } from 'react'
 import { useEffect, useRef, useState } from 'react'
 
-const NAV_ITEMS = [
-  { to: '/' as const, label: 'Index', num: '01' },
-  { to: '/heritage' as const, label: 'Heritage', num: '02' },
-  { to: '/legends' as const, label: 'Legends', num: '03' },
-]
-
 export default function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const headerRef = useRef<HTMLElement | null>(null)
@@ -17,11 +11,10 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className={`fixed inset-x-0 top-0 z-50 px-6 py-5 transition-colors duration-200 sm:px-10 sm:py-6 ${textColor} backdrop-blur-xs`}
+      className={`fixed inset-x-0 top-0 z-50 px-6 py-5 transition-colors duration-200 sm:px-10 sm:py-6 ${textColor} lg:backdrop-blur-xs`}
     >
       <div className="grid grid-cols-2 items-center gap-4">
         <BrandLink />
-        {/* <HeaderNav pathname={pathname} /> */}
         <HeaderMeta />
       </div>
     </header>
@@ -95,44 +88,6 @@ function BrandLink() {
       <span>AUDI</span>
       <span className="h-1 w-1 rounded-full bg-red-500 inline-block" />
       <span>SPORT</span>
-    </Link>
-  )
-}
-
-function HeaderNav({ pathname }: { pathname: string }) {
-  return (
-    <nav className="flex items-center gap-8 text-[11px] font-medium tracking-[0.18em] uppercase">
-      {NAV_ITEMS.map((item) => (
-        <HeaderNavItem
-          key={item.to}
-          item={item}
-          isActive={pathname === item.to}
-        />
-      ))}
-    </nav>
-  )
-}
-
-function HeaderNavItem({
-  item,
-  isActive,
-}: {
-  item: (typeof NAV_ITEMS)[number]
-  isActive: boolean
-}) {
-  return (
-    <Link
-      key={item.to}
-      to={item.to}
-      className="group relative flex items-center gap-1.5"
-    >
-      <span className="font-mono text-[9px] opacity-60">{item.num}</span>
-      <span>{item.label}</span>
-      <span
-        className={`absolute -bottom-1.5 left-0 h-px bg-red-500 transition-all duration-300 ${
-          isActive ? 'w-full' : 'w-0 group-hover:w-full'
-        }`}
-      />
     </Link>
   )
 }
