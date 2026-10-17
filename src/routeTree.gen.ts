@@ -9,13 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as HeritageRouteImport } from './routes/heritage'
 import { Route as LegendsRouteImport } from './routes/legends'
+import { Route as HeritageRouteImport } from './routes/heritage'
+import { Route as IndexRouteImport } from './routes/index'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LegendsRoute = LegendsRouteImport.update({
+  id: '/legends',
+  path: '/legends',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HeritageRoute = HeritageRouteImport.update({
@@ -23,9 +23,9 @@ const HeritageRoute = HeritageRouteImport.update({
   path: '/heritage',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LegendsRoute = LegendsRouteImport.update({
-  id: '/legends',
-  path: '/legends',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -61,11 +61,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/legends': {
+      id: '/legends'
+      path: '/legends'
+      fullPath: '/legends'
+      preLoaderRoute: typeof LegendsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/heritage': {
@@ -75,11 +75,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HeritageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/legends': {
-      id: '/legends'
-      path: '/legends'
-      fullPath: '/legends'
-      preLoaderRoute: typeof LegendsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
