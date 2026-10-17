@@ -610,6 +610,12 @@ function FinalChapter() {
     >
       <div
         aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 -left-1 z-50 hidden w-2 bg-black lg:block"
+        data-f1-seam-guard
+      />
+
+      <div
+        aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-[20svh] h-px lg:hidden"
         data-f1-scroll-end
       />
