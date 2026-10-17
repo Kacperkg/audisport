@@ -20,15 +20,11 @@ by Audi AG.
 - Mobile/tablet vertical fallback with viewport-triggered reveals.
 - Fixed header that samples the content underneath and changes contrast between
   light and dark sections.
-- File-based TanStack Router routes and server/client production bundles.
+- A file-based TanStack Router index route with server/client production bundles.
 - Local PP Neue Montreal fonts using `font-display: swap`, plus system fallbacks.
 
 ### In progress or incomplete
 
-- `/heritage` and `/legends` are placeholder pages.
-- Navigation for those routes exists in code but is currently commented out.
-- Story image regions after the hero are red placeholder blocks rather than
-  final media.
 - `Footer` exists but is not rendered by the root document.
 - No automated tests or CI workflow are committed.
 - No reduced-motion mode is implemented for the loader or scroll animations.
@@ -43,8 +39,8 @@ by Audi AG.
 | Motion | GSAP, `@gsap/react`, ScrollTrigger, Lenis |
 | Tooling | pnpm, ESLint, Prettier, Vitest (configured, no tests) |
 
-`motion` is installed and imported in one component, but the current experience
-is implemented with GSAP and Lenis.
+`motion` remains installed, but the current experience is implemented with GSAP
+and Lenis.
 
 ## Architecture and interaction design
 
@@ -79,19 +75,18 @@ scroll/resize work through `requestAnimationFrame`.
   vertical document flow below that breakpoint.
 - Decorative per-letter spans are hidden from assistive technology while their
   heading exposes a complete `aria-label`.
-- Navigation uses semantic links and story panels use headings and articles.
+- The brand link is semantic and story panels use headings and articles.
 
 Remaining accessibility work:
 
 - honor `prefers-reduced-motion` and provide a non-animated loader/story path;
 - review heading hierarchy (several sections currently use multiple `h1`s);
 - provide accessible text context for the CSS background hero image;
-- expose and keyboard-test the currently disabled primary navigation;
 - test contrast, zoom, focus order, and screen-reader output.
 
 ## Performance notes
 
-- Route output is split into index, Heritage, Legends, and shared chunks.
+- Route output is split into index and shared chunks.
 - Development tools are removed from the production bundle.
 - Local fonts use `font-display: swap`.
 - Scroll listeners are passive and header updates are animation-frame batched.
@@ -178,8 +173,6 @@ is committed, so this README does not claim the site is deployed.
 
 ## Before using this as a primary portfolio showcase
 
-- Finish or remove the Heritage and Legends routes and restore intentional nav.
-- Replace timeline placeholder blocks with licensed, optimized imagery.
 - Add reduced-motion behavior and targeted interaction tests.
 - Fix lint scope and add CI for format, lint, test, and build.
 - Verify factual copy/statistics and document image/font licensing.

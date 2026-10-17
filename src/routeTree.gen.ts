@@ -9,20 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LegendsRouteImport } from './routes/legends'
-import { Route as HeritageRouteImport } from './routes/heritage'
 import { Route as IndexRouteImport } from './routes/index'
 
-const LegendsRoute = LegendsRouteImport.update({
-  id: '/legends',
-  path: '/legends',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HeritageRoute = HeritageRouteImport.update({
-  id: '/heritage',
-  path: '/heritage',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,50 +19,28 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/heritage': typeof HeritageRoute
-  '/legends': typeof LegendsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/heritage': typeof HeritageRoute
-  '/legends': typeof LegendsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/heritage': typeof HeritageRoute
-  '/legends': typeof LegendsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/heritage' | '/legends'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/heritage' | '/legends'
-  id: '__root__' | '/' | '/heritage' | '/legends'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HeritageRoute: typeof HeritageRoute
-  LegendsRoute: typeof LegendsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/legends': {
-      id: '/legends'
-      path: '/legends'
-      fullPath: '/legends'
-      preLoaderRoute: typeof LegendsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/heritage': {
-      id: '/heritage'
-      path: '/heritage'
-      fullPath: '/heritage'
-      preLoaderRoute: typeof HeritageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -87,8 +53,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HeritageRoute: HeritageRoute,
-  LegendsRoute: LegendsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
