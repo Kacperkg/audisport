@@ -93,13 +93,13 @@ export default function PhilosophySection() {
   return (
     <section
       ref={sectionRef}
-      className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 lg:sticky lg:top-0 lg:grid-cols-5 lg:gap-0 lg:px-20 lg:py-0"
+      className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 2xl:sticky 2xl:top-0 2xl:grid-cols-5 2xl:gap-0 2xl:px-20 2xl:py-0"
     >
       <SideCopy title="Our Philosophy" lines={PHILOSOPHY_LINES} />
 
       <div
         ref={statementRef}
-        className="order-1 flex flex-col items-center justify-center gap-4 text-center text-4xl font-black uppercase leading-[0.9] sm:text-5xl lg:order-none lg:col-span-3 lg:col-start-2 lg:text-6xl lg:leading-12"
+        className="order-1 flex flex-col items-center justify-center gap-4 text-center text-4xl font-black uppercase leading-[0.9] sm:text-5xl 2xl:order-none 2xl:col-span-3 2xl:col-start-2 2xl:text-6xl 2xl:leading-12"
       >
         {STATEMENT_LINES.map((line) => (
           <AnimatedLine key={line.text} {...line} />
@@ -122,12 +122,12 @@ function SideCopy({
 }) {
   const placement =
     position === 'left'
-      ? 'order-2 lg:order-none lg:col-start-1'
-      : 'order-3 lg:order-none lg:col-start-5'
+      ? 'order-2 2xl:order-none 2xl:col-start-1'
+      : 'order-3 2xl:order-none 2xl:col-start-5'
 
   return (
     <div
-      className={`font-jetbrains flex flex-col items-start justify-center gap-4 text-sm lg:col-span-1 ${placement}`}
+      className={`font-jetbrains flex flex-col items-start justify-center gap-4 text-sm 2xl:col-span-1 ${placement}`}
     >
       <h2 className="border-b w-full pb-4 border-black/30 uppercase">
         {title}

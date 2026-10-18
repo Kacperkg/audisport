@@ -19,11 +19,11 @@ export default function App() {
         <PageLoader />
         <Hero />
         <section className="relative">
-          <div className="min-h-screen lg:min-h-[250dvh]">
+          <div className="min-h-screen 2xl:min-h-[250dvh]">
             <PhilosophySection />
           </div>
           <div
-            className="relative z-20 bg-black lg:mt-[-75dvh]"
+            className="relative z-20 bg-black 2xl:mt-[-75dvh]"
             data-header-theme="dark"
           >
             <MotorsportStory />

@@ -14,11 +14,11 @@ export default function MotorsportStory() {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-black lg:h-screen lg:overflow-hidden"
+      className="relative bg-black 2xl:h-screen 2xl:overflow-hidden"
     >
       <div
         ref={trackRef}
-        className="flex w-full flex-col lg:h-full lg:w-max lg:flex-row"
+        className="flex w-full flex-col 2xl:h-full 2xl:w-max 2xl:flex-row"
       >
         <StoryIntro />
         {CHAPTERS.map((chapter) => (

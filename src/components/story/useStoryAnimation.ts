@@ -170,7 +170,7 @@ export function useStoryAnimation(
       return { f1, revealActiveItems, revealItem, revealOnScroll }
     }
 
-    media.add('(min-width: 1024px)', () => {
+    media.add('(min-width: 1536px)', () => {
       const revealController = createRevealController()
       const timeline = gsap.timeline({
         scrollTrigger: {
@@ -218,7 +218,7 @@ export function useStoryAnimation(
       )
     })
 
-    media.add('(max-width: 1023px)', () => {
+    media.add('(max-width: 1535px)', () => {
       const revealController = createRevealController()
 
       gsap.set(track, { clearProps: 'transform' })
@@ -331,7 +331,7 @@ function appendF1RevealAnimation(
 
 function useStoryImagePreload() {
   useEffect(() => {
-    if (!window.matchMedia('(min-width: 1024px)').matches) return
+    if (!window.matchMedia('(min-width: 1536px)').matches) return
 
     let cancelled = false
 

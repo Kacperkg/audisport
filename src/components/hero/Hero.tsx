@@ -35,11 +35,7 @@ export default function Hero() {
       imageRef.current,
       { scale: 1 },
       {
-        scale: () => {
-          if (window.innerWidth >= 768) return 0.45
-          if (window.innerWidth >= 640) return 0.4
-          return 0.3
-        },
+        scale: 0.3,
         force3D: true,
         transformOrigin: 'center center',
         ease: 'none',

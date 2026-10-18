@@ -2,12 +2,12 @@ const BACKGROUND_YEARS = [
   {
     year: '1980',
     className:
-      'col-span-2 row-span-1 row-start-2 col-start-2 self-center justify-self-start text-7xl font-black font-jetbrains sm:text-9xl lg:text-[180px]',
+      'absolute left-0 top-1/2 -translate-x-[8%] -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
   },
   {
     year: '2026',
     className:
-      'col-span-2 row-span-1 row-start-2 col-start-13 self-center text-7xl font-black font-jetbrains sm:col-start-15 sm:text-9xl lg:text-[180px]',
+      'absolute right-0 top-1/2 translate-x-[8%] -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
   },
 ]
 
@@ -28,7 +28,7 @@ export default function HeroBackground() {
         </p>
       ))}
 
-      <div className="col-span-20 row-span-1 row-start-3 mt-8 self-start justify-self-center px-4 text-black sm:mt-14 lg:mt-20">
+      <div className="absolute inset-x-0 bottom-[5svh] mx-auto px-4 text-black sm:bottom-[7svh]">
         <div className="flex items-center justify-center gap-3 sm:gap-4">
           <HorizontalDivider />
           <p className="font-jetbrains text-center text-sm font-medium leading-loose sm:text-xl">

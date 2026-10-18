@@ -209,17 +209,5 @@ body:has(.page-loader) .hero-scale-target {
       backface-visibility: visible;
       will-change: auto;
     }
-
-    @media (min-width: 640px) {
-      .hero-scale-target {
-        --hero-end-scale: 0.4;
-      }
-    }
-
-    @media (min-width: 768px) {
-      .hero-scale-target {
-        --hero-end-scale: 0.45;
-      }
-    }
   }
 }

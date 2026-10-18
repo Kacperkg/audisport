@@ -11,12 +11,12 @@ export default function StoryChapter({
 
   return (
     <article
-      className="relative grid min-h-screen w-full shrink-0 grid-cols-1 gap-12 overflow-hidden bg-black px-6 py-24 text-white sm:px-10 lg:h-full lg:w-[106vw] lg:grid-cols-12 lg:gap-0 lg:px-24 lg:py-16"
+      className="relative grid min-h-screen w-full shrink-0 grid-cols-1 gap-12 overflow-hidden bg-black px-6 py-24 text-white sm:px-10 2xl:h-full 2xl:w-[106vw] 2xl:grid-cols-12 2xl:gap-0 2xl:px-24 2xl:py-16"
       data-header-theme="dark"
       data-story-panel
     >
       <p
-        className={`pointer-events-none absolute font-jetbrains text-[32vw] font-black leading-none text-white/[0.035] lg:text-[20vw] ${layout.year}`}
+        className={`pointer-events-none absolute font-jetbrains text-[32vw] font-black leading-none text-white/[0.035] 2xl:text-[20vw] ${layout.year}`}
         aria-hidden="true"
       >
         {chapter.year}
@@ -32,7 +32,7 @@ export default function StoryChapter({
 
         <WipeText
           as="h2"
-          className="max-w-[10ch] text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl lg:text-7xl"
+          className="max-w-[10ch] text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl 2xl:text-7xl"
         >
           {chapter.title}
           <span className="text-red-500">.</span>
