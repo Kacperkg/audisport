@@ -1,42 +1,45 @@
 # AudiSport
 
-AudiSport is a React experience exploring Audi's motorsport history.
-It is built as a frontend showcase: responsive typography, scroll-linked
-storytelling, smooth scrolling, animated text reveals, and an adaptive fixed
-header are combined into a cinematic single-page index.
+AudiSport is a live, independent portfolio showcase exploring Audi's motorsport
+history through an animation-led, single-page experience.
+
+**Live site:** [audisport.kacpergajdarski.com](https://audisport.kacpergajdarski.com/)
 
 This is an independent portfolio project. It is not affiliated with or endorsed
 by Audi AG.
 
 ## Project status
 
-### Implemented
+AudiSport is live in production and included in the creator's main portfolio.
+The experience intentionally uses continuous motion, scroll-linked storytelling,
+animated text reveals, and smooth scrolling as core design decisions.
 
-- Responsive index page with mobile, tablet, and desktop layouts.
-- Full-viewport hero composition with locally served photography.
-- Lenis smooth scrolling integrated with GSAP ScrollTrigger.
-- Scroll-linked hero, typography, masked-copy, and color-reveal animations.
-- Desktop horizontal story sequence with pinned scrolling and measured travel.
-- Mobile/tablet vertical fallback with viewport-triggered reveals.
-- Fixed header that samples the content underneath and changes contrast between
-  light and dark sections.
-- A lightweight Vite single-page entry with static production output.
-- Local PP Neue Montreal fonts using `font-display: swap`, plus system fallbacks.
+Implemented features include:
 
-### In progress or incomplete
-
-- No automated tests or CI workflow are committed.
-- No reduced-motion mode is implemented for the loader or scroll animations.
-- Motorsport statistics and copy need citations before publication.
+- Responsive mobile, tablet, and desktop layouts.
+- A full-viewport hero with responsive, locally served WebP sources and a JPEG
+  fallback.
+- A pinned horizontal motorsport timeline on desktop (`1024px` and wider), with
+  measured travel based on the track's rendered width.
+- A vertical, document-flow timeline on mobile and tablet, with
+  viewport-triggered chapter reveals.
+- An adaptive fixed header that samples the content beneath it and switches
+  contrast over light and dark sections.
+- GSAP and ScrollTrigger choreography for the hero, editorial sections, text
+  reveals, story chapters, and Formula 1 finale.
+- Lenis smooth scrolling on desktop devices with a fine pointer, connected to
+  GSAP's ticker and ScrollTrigger lifecycle.
+- Static Vite production output, deployment metadata, `robots.txt`, and a
+  one-page XML sitemap.
 
 ## Technology stack
 
-| Area              | Technologies                                          |
-| ----------------- | ----------------------------------------------------- |
-| UI                | React 19, TypeScript, Tailwind CSS 4                  |
-| Application shell | Vite SPA                                              |
-| Motion            | GSAP, `@gsap/react`, ScrollTrigger, Lenis             |
-| Tooling           | pnpm, ESLint, Prettier, Vitest (configured, no tests) |
+| Area              | Technologies                              |
+| ----------------- | ----------------------------------------- |
+| UI                | React 19, TypeScript, Tailwind CSS 4      |
+| Application shell | Vite SPA                                  |
+| Motion            | GSAP, `@gsap/react`, ScrollTrigger, Lenis |
+| Tooling           | pnpm, ESLint, Prettier, Vitest            |
 
 ## Architecture and interaction design
 
@@ -58,55 +61,49 @@ Vite single-page entry
 Content is held in typed configuration modules close to the components, keeping
 repeated statistics, statements, and timeline chapters consistent. The hero,
 philosophy, story panels, and animation orchestration live in focused modules
-instead of one page component. GSAP scopes animations through `useGSAP`;
-media-query branches build different interaction models for desktop and smaller
-screens and are reverted on cleanup. Lenis is connected to GSAP's ticker and
+instead of one page component.
+
+GSAP scopes component animations through `useGSAP`. A `gsap.matchMedia()` split
+creates the horizontal desktop sequence and the vertical mobile/tablet sequence,
+then reverts those branches during cleanup. On supported mobile Safari versions,
+the hero can use a native scroll-driven CSS animation; GSAP provides the other
+hero path. Lenis is connected to GSAP's ticker on eligible desktop devices and
 explicitly disconnected on unmount.
 
-The header avoids a hard-coded scroll threshold. It samples three points beneath
-it with `elementsFromPoint` and reads `data-header-theme` markers, then batches
-scroll/resize work through `requestAnimationFrame`.
+The adaptive header avoids a hard-coded scroll threshold. It samples three
+points beneath itself with `elementsFromPoint`, reads `data-header-theme`
+markers, and batches scroll and resize work through `requestAnimationFrame`.
 
 ## Responsive design and accessibility
 
 - Tailwind breakpoints reshape the hero statistics and editorial sections.
 - The story changes from a pinned horizontal track at `1024px` to normal
   vertical document flow below that breakpoint.
-- Decorative per-letter spans are hidden from assistive technology while their
-  heading exposes a complete `aria-label`.
-- The brand link is semantic and story panels use headings and articles.
+- Timeline images include descriptive alternative text.
+- The brand mark is a semantic link, timeline panels use articles and headings,
+  and decorative imagery and oversized year treatments are hidden from
+  assistive technology where appropriate.
 
-Remaining accessibility work:
-
-- honor `prefers-reduced-motion` and provide a non-animated loader/story path;
-- review heading hierarchy (several sections currently use multiple `h1`s);
-- provide accessible text context for the CSS background hero image;
-- test contrast, zoom, focus order, and screen-reader output.
+The animation-led experience and its continuous motion are intentional parts of
+the project rather than incomplete work. Accessibility has not been certified
+or comprehensively audited; see the known limitations below for the checks that
+remain outstanding.
 
 ## Performance notes
 
-- The production output is a static Vite bundle with no router or server runtime.
-- Local fonts use `font-display: swap`.
+- The production output is a static Vite bundle with no router or server
+  runtime.
+- The hero uses responsive 1600px and 2560px WebP sources with a JPEG fallback.
+- Local PP Neue Montreal fonts use `font-display: swap`.
 - Scroll listeners are passive and header updates are animation-frame batched.
+- Story imagery is lazy-loaded and decoded asynchronously in the rendered
+  chapters, with a desktop preload pass to warm the browser cache.
 
-The hero JPEG is approximately 1.7 MB in the production output and is not served
-with responsive variants. Ten OTF font files are committed while only a subset
-of weights appears necessary, and additional Google Font imports are present.
-Image conversion (`avif`/`webp`), `srcset`/`<picture>`, font subsetting, and
-removing unused font requests are the clearest performance follow-ups.
-
-## Screenshots
-
-No rendered application screenshots are committed. The file
-`public/AU090348_medium.jpg` is source artwork, not a UI screenshot.
-
-Recommended captures:
-
-1. The expanded hero at desktop width.
-2. The typography reveal and philosophy/purpose section.
-3. A desktop timeline chapter during horizontal scrolling.
-4. The same chapter in the mobile vertical layout.
-5. The header over both light and dark content.
+Image and font delivery still have optimisation opportunities. Timeline
+chapters use one WebP size each rather than responsive `srcset` variants, ten OTF
+font files are committed, and Google Font imports remain alongside the local
+font family. Font subsetting, removing unused font files or requests, and
+responsive timeline image variants are possible follow-ups.
 
 ## Getting started
 
@@ -126,54 +123,55 @@ pnpm build
 pnpm preview
 ```
 
-The production build completed successfully during the documentation audit on
-16 October 2026.
-
 ## Testing and code quality
 
 ```bash
+pnpm build
 pnpm test
 pnpm lint
+pnpm format
 pnpm check
 ```
 
-Current limitations:
-
-- `pnpm test` exits with “No test files found”. Vitest and Testing Library are
-  installed, but no tests exist.
-- `pnpm lint` currently fails because generated `.output` JavaScript and
-  `tailwind.config.js` are included while ESLint expects files from the TypeScript
-  project. Add suitable ignores or parser configuration before using lint in CI.
-- `pnpm check` checks Prettier formatting only; it does not run TypeScript or
-  ESLint despite the package script name.
-
-High-value tests would cover responsive story-mode selection, animation cleanup,
-header theme switching, page rendering, and a reduced-motion fallback.
+Vitest and Testing Library are installed, but no automated test files are
+committed. No CI workflow is currently committed. The exact results of the
+commands above can change as the repository evolves and should be confirmed by
+running them locally rather than inferred from configuration alone.
 
 ## Deployment
 
-Vite generates a static bundle in `dist`, which Vercel can serve directly. No
-custom server runtime or route rewrites are required for this single page.
-The canonical production URL is
-`https://audisport.kacpergajdarski.com/`; `robots.txt` references the static
-one-page sitemap served at `/sitemap.xml`.
+The production site is deployed at
+[https://audisport.kacpergajdarski.com/](https://audisport.kacpergajdarski.com/).
+Vite generates the static bundle in `dist`, which is served by Vercel without a
+custom server runtime.
+
+Both the production page and its
+[XML sitemap](https://audisport.kacpergajdarski.com/sitemap.xml) returned HTTP
+200 during the documentation audit on 18 October 2026. `robots.txt` references
+that sitemap, which lists the canonical production URL.
+
+## Known limitations
+
+- No automated tests or CI workflow are committed.
+- Motorsport statistics and editorial claims do not include source citations in
+  the repository and should not be treated as a referenced historical record.
+- Accessibility checks for heading hierarchy, contrast, zoom, keyboard focus
+  order, and screen-reader output have not been comprehensively completed.
+- Timeline images and the committed font set have the optimisation opportunities
+  described above.
+- Responsive behavior is implemented for desktop, tablet, and mobile, but no
+  automated cross-browser or device regression suite is committed.
 
 ## Technical decisions and trade-offs
 
-- **Two story modes:** separate desktop-horizontal and mobile-vertical behavior
-  protects smaller screens from a desktop interaction pattern, but increases the
-  number of paths to test.
+- **Two story modes:** separate desktop-horizontal and mobile/tablet-vertical
+  behavior keeps the interaction appropriate to each layout, while increasing
+  the number of paths that require manual testing.
 - **Measured scroll distance:** deriving movement from `scrollWidth` supports
   content changes better than a fixed pixel distance, while still requiring
   careful refresh behavior after assets and fonts load.
 - **Theme markers:** declarative `data-header-theme` regions keep contrast logic
-  out of individual sections, though DOM sampling on scroll should be profiled.
-- **Animation-led presentation:** GSAP offers precise choreography, but reduced
-  motion, focus behavior, and content availability must remain first-class.
-
-## Before using this as a primary portfolio showcase
-
-- Add reduced-motion behavior and targeted interaction tests.
-- Fix lint scope and add CI for format, lint, test, and build.
-- Verify factual copy/statistics and document image/font licensing.
-- Add real responsive screenshots and a verified live link when deployed.
+  out of individual sections, though DOM sampling on scroll remains work that
+  should be profiled on lower-powered devices.
+- **Animation-led presentation:** GSAP provides precise choreography, and the
+  continuous motion is a deliberate part of the portfolio concept.
