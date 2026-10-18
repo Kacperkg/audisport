@@ -30,15 +30,15 @@ const PURPOSE_LINES = [
   'Every victory becomes part of something greater.',
 ]
 
-export default function Subsection() {
+export default function PhilosophySection() {
   const sectionRef = useRef<HTMLElement | null>(null)
-  const SubsectionRef = useRef<HTMLDivElement | null>(null)
+  const statementRef = useRef<HTMLDivElement | null>(null)
 
   useGSAP(() => {
-    if (!sectionRef.current || !SubsectionRef.current) return
+    if (!sectionRef.current || !statementRef.current) return
 
     const letters = gsap.utils.toArray<HTMLElement>(
-      SubsectionRef.current.querySelectorAll('[data-letter]'),
+      statementRef.current.querySelectorAll('[data-letter]'),
     )
     const lineCovers = gsap.utils.toArray<HTMLElement>(
       sectionRef.current.querySelectorAll('[data-line-cover]'),
@@ -48,33 +48,34 @@ export default function Subsection() {
       PURPOSE_LINES.length,
     )
 
-    const letterTimeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: SubsectionRef.current,
-        start: '75% 75%',
-        end: '75% center',
-        scrub: true,
-      },
-    })
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: statementRef.current,
+          start: '75% 75%',
+          end: '75% center',
+          scrub: true,
+        },
+      })
+      .to(
+        letters,
+        {
+          color: (_, letter) =>
+            letter.dataset.targetColor ?? 'rgba(0, 0, 0, 1)',
+          ease: 'none',
+          stagger: 0.03,
+        },
+        0,
+      )
 
     const sideTimeline = gsap.timeline({
       scrollTrigger: {
-        trigger: SubsectionRef.current,
+        trigger: statementRef.current,
         start: 'bottom 75%',
         end: 'bottom center',
         scrub: true,
       },
     })
-
-    letterTimeline.to(
-      letters,
-      {
-        color: (_, letter) => letter.dataset.targetColor ?? 'rgba(0, 0, 0, 1)',
-        ease: 'none',
-        stagger: 0.03,
-      },
-      0,
-    )
 
     Array.from({ length: sideLineCount }).forEach((_, index) => {
       const coversForRow = lineCovers.filter(
@@ -83,10 +84,7 @@ export default function Subsection() {
 
       sideTimeline.to(
         coversForRow,
-        {
-          yPercent: 110,
-          ease: 'none',
-        },
+        { yPercent: 110, ease: 'none' },
         index * 0.08,
       )
     })
@@ -97,46 +95,59 @@ export default function Subsection() {
       ref={sectionRef}
       className="z-10 grid min-h-screen w-full grid-cols-1 gap-12 px-6 py-28 sm:px-10 lg:sticky lg:top-0 lg:grid-cols-5 lg:gap-0 lg:px-20 lg:py-0"
     >
-      <div className="font-jetbrains order-2 flex flex-col items-start justify-center gap-4 text-sm lg:order-none lg:col-span-1 lg:col-start-1">
-        <h1 className="border-b w-full pb-4 border-black/30 uppercase">
-          Our Philosophy
-        </h1>
+      <SideCopy title="Our Philosophy" lines={PHILOSOPHY_LINES} />
 
-        <div className="capitalize leading-relaxed">
-          {PHILOSOPHY_LINES.map((line, index) => (
-            <MaskedSideLine key={line} order={index}>
-              {line}
-            </MaskedSideLine>
-          ))}
-        </div>
-      </div>
       <div
-        ref={SubsectionRef}
+        ref={statementRef}
         className="order-1 flex flex-col items-center justify-center gap-4 text-center text-4xl font-black uppercase leading-[0.9] sm:text-5xl lg:order-none lg:col-span-3 lg:col-start-2 lg:text-6xl lg:leading-12"
       >
         {STATEMENT_LINES.map((line) => (
           <AnimatedLine key={line.text} {...line} />
         ))}
       </div>
-      <div className="font-jetbrains order-3 flex flex-col items-start justify-center gap-4 text-sm lg:order-none lg:col-span-1 lg:col-start-5">
-        <h1 className="border-b w-full pb-4 border-black/30 uppercase">
-          Our purpose
-        </h1>
-        <div className="capitalize leading-relaxed">
-          {PURPOSE_LINES.map((line, index) => (
-            <MaskedSideLine
-              key={line}
-              order={index}
-              className={
-                index === PURPOSE_LINES.length - 1 ? 'max-w-[30ch]' : ''
-              }
-            >
-              {line}
-            </MaskedSideLine>
-          ))}
-        </div>
-      </div>
+
+      <SideCopy title="Our purpose" lines={PURPOSE_LINES} position="right" />
     </section>
+  )
+}
+
+function SideCopy({
+  lines,
+  position = 'left',
+  title,
+}: {
+  lines: string[]
+  position?: 'left' | 'right'
+  title: string
+}) {
+  const placement =
+    position === 'left'
+      ? 'order-2 lg:order-none lg:col-start-1'
+      : 'order-3 lg:order-none lg:col-start-5'
+
+  return (
+    <div
+      className={`font-jetbrains flex flex-col items-start justify-center gap-4 text-sm lg:col-span-1 ${placement}`}
+    >
+      <h2 className="border-b w-full pb-4 border-black/30 uppercase">
+        {title}
+      </h2>
+      <div className="capitalize leading-relaxed">
+        {lines.map((line, index) => (
+          <MaskedSideLine
+            key={line}
+            order={index}
+            className={
+              position === 'right' && index === lines.length - 1
+                ? 'max-w-[30ch]'
+                : ''
+            }
+          >
+            {line}
+          </MaskedSideLine>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -150,7 +161,7 @@ function MaskedSideLine({
   order: number
 }) {
   return (
-    <h2 className={`relative isolate overflow-hidden ${className}`}>
+    <p className={`relative isolate overflow-hidden ${className}`}>
       <span className="relative z-0">{children}</span>
       <span
         aria-hidden="true"
@@ -158,7 +169,7 @@ function MaskedSideLine({
         data-line-cover
         data-line-order={order}
       />
-    </h2>
+    </p>
   )
 }
 
@@ -172,7 +183,7 @@ function AnimatedLine({
   suffix?: ReactNode
 }) {
   return (
-    <h1 aria-label={`${text}${suffix ? '.' : ''}`}>
+    <h2 aria-label={`${text}${suffix ? '.' : ''}`}>
       {Array.from(text).map((letter, index) => (
         <span
           key={`${letter}-${index}`}
@@ -185,6 +196,6 @@ function AnimatedLine({
         </span>
       ))}
       {suffix}
-    </h1>
+    </h2>
   )
 }

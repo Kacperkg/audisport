@@ -4,34 +4,34 @@ import { useGSAP } from '@gsap/react'
 
 const CIRCLES = ['c1', 'c2', 'c3', 'c4']
 
-export default function IndexLoader() {
+export default function PageLoader() {
   const circlesRef = useRef<(SVGCircleElement | null)[]>([])
-  const mainRef = useRef<HTMLElement | null>(null)
+  const loaderRef = useRef<HTMLDivElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useGSAP(() => {
-    const tl = gsap.timeline()
+    const timeline = gsap.timeline()
 
     circlesRef.current.forEach((circle, index) => {
-      if (circle) {
-        const circumference = 2 * Math.PI * 45
-        circle.style.strokeDasharray = `${circumference}`
-        circle.style.strokeDashoffset = `${circumference}`
+      if (!circle) return
 
-        tl.to(
-          circle,
-          {
-            strokeDashoffset: 0,
-            duration: 1.5,
-            ease: 'power1.inOut',
-          },
-          index * 0.5,
-        )
-      }
+      const circumference = 2 * Math.PI * 45
+      circle.style.strokeDasharray = `${circumference}`
+      circle.style.strokeDashoffset = `${circumference}`
+
+      timeline.to(
+        circle,
+        {
+          strokeDashoffset: 0,
+          duration: 1.5,
+          ease: 'power1.inOut',
+        },
+        index * 0.5,
+      )
     })
 
-    tl.to(
-      mainRef.current,
+    timeline.to(
+      loaderRef.current,
       {
         scale: 100,
         opacity: 0,
@@ -41,20 +41,19 @@ export default function IndexLoader() {
       '+=0.2',
     )
 
-    const hideTimer = setTimeout(() => {
-      setIsLoading(false)
-    }, tl.duration() * 1000)
+    const hideTimer = window.setTimeout(
+      () => setIsLoading(false),
+      timeline.duration() * 1000,
+    )
 
-    return () => clearTimeout(hideTimer)
+    return () => window.clearTimeout(hideTimer)
   }, [])
 
-  if (!isLoading) {
-    return null
-  }
+  if (!isLoading) return null
 
   return (
-    <main
-      ref={mainRef}
+    <div
+      ref={loaderRef}
       className="w-full min-h-screen bg-black fixed z-50 -translate-1/2 left-1/2 top-1/2"
       data-header-theme="dark"
     >
@@ -63,8 +62,8 @@ export default function IndexLoader() {
           {CIRCLES.map((circle, index) => (
             <circle
               key={circle}
-              ref={(el) => {
-                circlesRef.current[index] = el
+              ref={(element) => {
+                circlesRef.current[index] = element
               }}
               cx={50 + index * 60}
               cy="50"
@@ -76,6 +75,6 @@ export default function IndexLoader() {
           ))}
         </svg>
       </div>
-    </main>
+    </div>
   )
 }
