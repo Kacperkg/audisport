@@ -7,6 +7,9 @@ import { STORY_IMAGE_SOURCES } from './storyData'
 
 gsap.registerPlugin(ScrollTrigger)
 
+const DESKTOP_SCROLL_PACE = 0.78
+const DESKTOP_FINALE_DISTANCE = 0.72
+
 type F1AnimationTargets = {
   stage: HTMLElement | null
   endMarker: HTMLElement | null
@@ -173,7 +176,11 @@ export function useStoryAnimation(
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: () => `+=${getScrollDistance() + window.innerHeight}`,
+          end: () =>
+            `+=${
+              getScrollDistance() * DESKTOP_SCROLL_PACE +
+              window.innerHeight * DESKTOP_FINALE_DISTANCE
+            }`,
           pin: true,
           scrub: true,
           anticipatePin: 1,
@@ -198,7 +205,7 @@ export function useStoryAnimation(
         timeline,
         revealController.f1,
         {
-          question: viewportHeight * 0.2,
+          question: viewportHeight * 0.14,
           masks: viewportHeight * 0.42,
           maskStagger: viewportHeight * 0.07,
           rule: viewportHeight * 0.05,

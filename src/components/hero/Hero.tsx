@@ -59,7 +59,10 @@ export default function Hero() {
       ref={sectionRef}
       className="hero-scroll-stage relative min-h-[calc(100dvh+50svh)] w-full sm:min-h-[calc(100dvh+70svh)] lg:min-h-[200dvh]"
     >
-      <div className="sticky top-0 h-[100dvh] w-full" data-header-theme="light">
+      <div
+        className="sticky top-0 h-[100svh] w-full lg:h-[100dvh]"
+        data-header-theme="light"
+      >
         <HeroImage imageRef={imageRef} />
         <HeroBackground />
       </div>

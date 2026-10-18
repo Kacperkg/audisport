@@ -11,7 +11,7 @@ export default function StoryChapter({
 
   return (
     <article
-      className="relative grid min-h-screen w-full shrink-0 grid-cols-1 gap-12 overflow-hidden bg-black px-6 py-24 text-white sm:px-10 lg:h-full lg:w-[128vw] lg:grid-cols-12 lg:gap-0 lg:px-24 lg:py-16"
+      className="relative grid min-h-screen w-full shrink-0 grid-cols-1 gap-12 overflow-hidden bg-black px-6 py-24 text-white sm:px-10 lg:h-full lg:w-[106vw] lg:grid-cols-12 lg:gap-0 lg:px-24 lg:py-16"
       data-header-theme="dark"
       data-story-panel
     >

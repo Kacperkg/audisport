@@ -7,7 +7,7 @@ const MASK_OVERLAP_PX = 2
 export default function FormulaOneChapter() {
   return (
     <article
-      className="relative h-[calc(100dvh+160svh)] w-full shrink-0 bg-black text-white lg:h-full lg:w-screen"
+      className="relative h-[260svh] w-full shrink-0 bg-black text-white lg:h-full lg:w-screen"
       data-header-theme="dark"
       data-f1-stage
       data-story-panel
@@ -23,7 +23,7 @@ export default function FormulaOneChapter() {
         data-f1-scroll-end
       />
 
-      <div className="sticky top-0 flex h-[100dvh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
+      <div className="sticky top-0 flex h-[100svh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
         <div className="relative z-40" data-f1-question>
           <WipeText
             as="h2"
