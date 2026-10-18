@@ -2,12 +2,12 @@ const BACKGROUND_YEARS = [
   {
     year: '1980',
     className:
-      'absolute left-0 top-1/2 -translate-x-[8%] -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
+      'absolute left-[clamp(1rem,2.5vw,4rem)] top-1/2 -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
   },
   {
     year: '2026',
     className:
-      'absolute right-0 top-1/2 translate-x-[8%] -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
+      'absolute right-[clamp(1rem,2.5vw,4rem)] top-1/2 -translate-y-1/2 text-[clamp(4.5rem,12vw,16rem)] font-black leading-none font-jetbrains',
   },
 ]
 
@@ -85,7 +85,9 @@ function StatGroup({
           {stat.label}
         </span>
       </li>
-      {showDivider && <div className="hidden w-px grow bg-black/30 lg:flex" />}
+      {showDivider && (
+        <div className="hidden h-16 w-px shrink-0 bg-black/30 lg:block" />
+      )}
     </>
   )
 }
