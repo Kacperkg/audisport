@@ -104,6 +104,17 @@ body {
     sans-serif;
 }
 
+html:has(.page-loader),
+body:has(.page-loader) {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: black;
+}
+
+body:has(.page-loader) .page-wrap {
+  background-color: black;
+}
+
 @supports (-webkit-touch-callout: none) {
   html,
   body,

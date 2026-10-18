@@ -54,10 +54,10 @@ export default function PageLoader() {
   return (
     <div
       ref={loaderRef}
-      className="w-full min-h-screen bg-black fixed z-50 -translate-1/2 left-1/2 top-1/2"
+      className="page-loader fixed left-0 top-0 z-50 h-[100lvh] w-full origin-center overflow-hidden bg-black"
       data-header-theme="dark"
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute left-1/2 top-[50svh] -translate-x-1/2 -translate-y-1/2">
         <svg width="280" height="100" viewBox="0 0 280 100">
           {CIRCLES.map((circle, index) => (
             <circle
