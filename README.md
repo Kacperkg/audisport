@@ -20,49 +20,48 @@ by Audi AG.
 - Mobile/tablet vertical fallback with viewport-triggered reveals.
 - Fixed header that samples the content underneath and changes contrast between
   light and dark sections.
-- A file-based TanStack Router index route with server/client production bundles.
+- A lightweight Vite single-page entry with static production output.
 - Local PP Neue Montreal fonts using `font-display: swap`, plus system fallbacks.
 
 ### In progress or incomplete
 
-- `Footer` exists but is not rendered by the root document.
 - No automated tests or CI workflow are committed.
 - No reduced-motion mode is implemented for the loader or scroll animations.
 - Motorsport statistics and copy need citations before publication.
 
 ## Technology stack
 
-| Area | Technologies |
-| --- | --- |
-| UI | React 19, TypeScript, Tailwind CSS 4 |
-| Application framework | TanStack Start, TanStack Router, Vite, Nitro |
-| Motion | GSAP, `@gsap/react`, ScrollTrigger, Lenis |
-| Tooling | pnpm, ESLint, Prettier, Vitest (configured, no tests) |
-
-`motion` remains installed, but the current experience is implemented with GSAP
-and Lenis.
+| Area              | Technologies                                          |
+| ----------------- | ----------------------------------------------------- |
+| UI                | React 19, TypeScript, Tailwind CSS 4                  |
+| Application shell | Vite SPA                                              |
+| Motion            | GSAP, `@gsap/react`, ScrollTrigger, Lenis             |
+| Tooling           | pnpm, ESLint, Prettier, Vitest (configured, no tests) |
 
 ## Architecture and interaction design
 
 ```text
-TanStack Start root document
+Vite single-page entry
   ├─ global metadata and styles
   ├─ adaptive fixed header
-  └─ file-based route outlet
-       └─ index route
-            ├─ animated ring loader
-            ├─ sticky, scaled hero
-            ├─ scroll-revealed editorial statement
-            └─ responsive motorsport timeline
-                 ├─ desktop: pinned horizontal track
-                 └─ mobile/tablet: vertical panels
+  └─ page composition
+       ├─ animated ring loader
+       ├─ sticky, scaled hero
+       ├─ scroll-revealed editorial statement
+       └─ responsive motorsport timeline
+            ├─ typed chapter data
+            ├─ isolated reveal/scroll animation hook
+            ├─ desktop: pinned horizontal track
+            └─ mobile/tablet: vertical panels
 ```
 
-Content is held in typed configuration arrays close to the components, keeping
-repeated statistics, statements, and timeline chapters consistent. GSAP scopes
-animations through `useGSAP`; media-query branches build different interaction
-models for desktop and smaller screens and are reverted on cleanup. Lenis is
-connected to GSAP's ticker and explicitly disconnected on unmount.
+Content is held in typed configuration modules close to the components, keeping
+repeated statistics, statements, and timeline chapters consistent. The hero,
+philosophy, story panels, and animation orchestration live in focused modules
+instead of one page component. GSAP scopes animations through `useGSAP`;
+media-query branches build different interaction models for desktop and smaller
+screens and are reverted on cleanup. Lenis is connected to GSAP's ticker and
+explicitly disconnected on unmount.
 
 The header avoids a hard-coded scroll threshold. It samples three points beneath
 it with `elementsFromPoint` and reads `data-header-theme` markers, then batches
@@ -86,8 +85,7 @@ Remaining accessibility work:
 
 ## Performance notes
 
-- Route output is split into index and shared chunks.
-- Development tools are removed from the production bundle.
+- The production output is a static Vite bundle with no router or server runtime.
 - Local fonts use `font-display: swap`.
 - Scroll listeners are passive and header updates are animation-frame batched.
 
@@ -150,13 +148,15 @@ Current limitations:
   ESLint despite the package script name.
 
 High-value tests would cover responsive story-mode selection, animation cleanup,
-header theme switching, route rendering, and a reduced-motion fallback.
+header theme switching, page rendering, and a reduced-motion fallback.
 
 ## Deployment
 
-TanStack Start and Nitro generate a Node server bundle in `.output`. No hosting
-configuration, CI/CD workflow, verified live URL, or production analytics setup
-is committed, so this README does not claim the site is deployed.
+Vite generates a static bundle in `dist`, which Vercel can serve directly. No
+custom server runtime or route rewrites are required for this single page.
+The canonical production URL is
+`https://audisport.kacpergajdarski.com/`; `robots.txt` references the static
+one-page sitemap served at `/sitemap.xml`.
 
 ## Technical decisions and trade-offs
 
