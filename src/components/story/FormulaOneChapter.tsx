@@ -23,8 +23,11 @@ export default function FormulaOneChapter() {
         data-f1-scroll-end
       />
 
-      <div className="sticky top-0 flex h-[100svh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
-        <div className="relative z-40" data-f1-question>
+      <div className="sticky top-0 flex h-[100lvh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 lg:relative lg:h-full lg:px-20 lg:py-0">
+        <div
+          className="absolute inset-x-0 top-0 z-40 flex h-[100svh] items-center justify-center px-6 sm:px-10 lg:relative lg:inset-auto lg:h-auto lg:px-0"
+          data-f1-question
+        >
           <WipeText
             as="h2"
             className="whitespace-nowrap text-[13vw] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white sm:text-[11vw] lg:text-[9vw]"
@@ -56,7 +59,7 @@ export default function FormulaOneChapter() {
           ))}
 
           <div
-            className="absolute inset-0 z-30 text-left text-black"
+            className="absolute inset-x-0 top-0 z-30 h-[100svh] text-left text-black lg:inset-0 lg:h-auto"
             data-f1-copy-overlay
             data-header-theme="light"
           >

@@ -115,6 +115,11 @@ body:has(.page-loader) .page-wrap {
   background-color: black;
 }
 
+body:has(.page-loader) .hero-scale-target {
+  animation: none !important;
+  transform: scale(1) !important;
+}
+
 @supports (-webkit-touch-callout: none) {
   html,
   body,
