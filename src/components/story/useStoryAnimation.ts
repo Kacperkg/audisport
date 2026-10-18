@@ -198,7 +198,7 @@ export function useStoryAnimation(
         timeline,
         revealController.f1,
         {
-          question: viewportHeight * 0.08,
+          question: viewportHeight * 0.2,
           masks: viewportHeight * 0.42,
           maskStagger: viewportHeight * 0.07,
           rule: viewportHeight * 0.05,
@@ -233,7 +233,7 @@ export function useStoryAnimation(
           timeline,
           revealController.f1,
           {
-            question: 0.12,
+            question: 0.26,
             masks: 0.64,
             maskStagger: 0.08,
             rule: 0.08,

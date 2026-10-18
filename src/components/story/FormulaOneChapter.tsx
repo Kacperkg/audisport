@@ -27,7 +27,7 @@ export default function FormulaOneChapter() {
         <div className="relative z-40" data-f1-question>
           <WipeText
             as="h2"
-            className="text-5xl font-black uppercase tracking-tight text-white sm:text-7xl lg:text-8xl"
+            className="whitespace-nowrap text-[13vw] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white sm:text-[11vw] lg:text-[9vw]"
           >
             What's next<span className="text-red-500">?</span>
           </WipeText>
