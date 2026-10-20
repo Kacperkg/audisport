@@ -8,6 +8,12 @@ history through an animation-led, single-page experience.
 This is an independent portfolio project. It is not affiliated with or endorsed
 by Audi AG.
 
+## Desktop preview
+
+![AudiSport desktop hero featuring the Audi quattro](docs/screenshots/desktop-hero.jpg)
+
+![AudiSport desktop finale featuring the Audi R26 Formula 1 car](docs/screenshots/desktop-finale.jpg)
+
 ## Project status
 
 AudiSport is live in production and included in the creator's main portfolio.
