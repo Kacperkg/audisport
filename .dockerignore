@@ -1,0 +1,18 @@
+# Allow only inputs needed by the build; exclude local env, Git and credentials.
+**
+!package.json
+!pnpm-lock.yaml
+!index.html
+!vite.config.ts
+!tsconfig.json
+!tailwind.config.js
+!src/
+!src/**
+!public/
+!public/**
+!deploy/
+!deploy/nginx.conf
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*

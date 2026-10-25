@@ -1,0 +1,12 @@
+# Merge these site blocks into the separately managed proxy configuration.
+# This file is an example only. Never replace /opt/hosting/proxy/Caddyfile.
+audisport.kacpergajdarski.com {
+	encode zstd gzip
+	reverse_proxy audi-production-frontend:8080
+}
+
+staging.audisport.kacpergajdarski.com {
+	encode zstd gzip
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy audi-staging-frontend:8080
+}

@@ -1,0 +1,44 @@
+name: ${COMPOSE_PROJECT_NAME:?Set COMPOSE_PROJECT_NAME in the environment file}
+
+services:
+  frontend:
+    # Intentionally no build section: promote the already tested image.
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX}:${IMAGE_TAG:?Set a full Git commit SHA as IMAGE_TAG}
+    pull_policy: never
+    user: '101:101'
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,uid=101,gid=101,mode=1770
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:8080/healthz',
+        ]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      web:
+        aliases:
+          - ${COMPOSE_PROJECT_NAME}-frontend
+
+networks:
+  web:
+    external: true
+    name: web

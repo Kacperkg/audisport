@@ -146,6 +146,9 @@ running them locally rather than inferred from configuration alone.
 
 ## Deployment
 
+For the additive EC2 Docker setup, staging-first deployment commands, and the
+Vercel cutover/rollback runbook, see [deploy/README.md](deploy/README.md).
+
 The production site is deployed at
 [https://audisport.kacpergajdarski.com/](https://audisport.kacpergajdarski.com/).
 Vite generates the static bundle in `dist`, which is served by Vercel without a
