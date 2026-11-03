@@ -25,9 +25,9 @@ Implemented features include:
 - Responsive mobile, tablet, and desktop layouts.
 - A full-viewport hero with responsive, locally served WebP sources and a JPEG
   fallback.
-- A pinned horizontal motorsport timeline on desktop (`1024px` and wider), with
+- A pinned horizontal motorsport timeline on wide desktop (`1536px` and wider), with
   measured travel based on the track's rendered width.
-- A vertical, document-flow timeline on mobile and tablet, with
+- A vertical, document-flow timeline below `1536px`, with
   viewport-triggered chapter reveals.
 - An adaptive fixed header that samples the content beneath it and switches
   contrast over light and dark sections.
@@ -83,8 +83,14 @@ markers, and batches scroll and resize work through `requestAnimationFrame`.
 ## Responsive design and accessibility
 
 - Tailwind breakpoints reshape the hero statistics and editorial sections.
-- The story changes from a pinned horizontal track at `1024px` to normal
-  vertical document flow below that breakpoint.
+- The story changes from a pinned horizontal track at `1536px` to normal
+  vertical document flow below that breakpoint or when reduced motion is enabled.
+- Below the wide-desktop layout, “Our Philosophy” and “Our Purpose” sit side by
+  side beneath the main statement from `640px` upward and stack on smaller screens.
+  “Our Purpose” uses end-aligned text, including its wrapped final line.
+- The fully revealed R26 finale holds for an additional viewport of scrolling
+  before the footer enters in the animated layouts. Reduced motion keeps the
+  finale in normal document flow.
 - Timeline images include descriptive alternative text.
 - The brand mark is a semantic link, timeline panels use articles and headings,
   and decorative imagery and oversized year treatments are hidden from
@@ -94,6 +100,48 @@ The animation-led experience and its continuous motion are intentional parts of
 the project rather than incomplete work. Accessibility has not been certified
 or comprehensively audited; see the known limitations below for the checks that
 remain outstanding.
+
+## Timeline keyboard and reduced-motion audit
+
+[Independent browser recheck and additional fixes, including screenshots](docs/browser-accessibility-audit.md)
+cover the current local workspace and production preview. Mobile testing used a
+narrow browser viewport, not a physical phone.
+
+Audited locally on 3 November 2026 in the Codex in-app browser on macOS,
+using **1600 × 900** (pinned desktop) and **390 × 844** (vertical narrow).
+Reduced motion was enabled through macOS Accessibility → Motion and confirmed
+with `matchMedia('(prefers-reduced-motion: reduce)')`; the original OS setting
+was restored afterward.
+
+| Viewport   | Motion preference | Result                                                                           |
+| ---------- | ----------------- | -------------------------------------------------------------------------------- |
+| 1600 × 900 | No preference     | Page Down traverses the horizontal chapters and reaches the footer.              |
+| 390 × 844  | No preference     | Vertical chapters and the animated R26 finale remain reachable.                  |
+| 1600 × 900 | Reduce            | Static vertical chapters, no pin spacer or animation-dependent text.             |
+| 390 × 844  | Reduce            | Static chapters, image and R26 copy in document flow; no clipped finale heading. |
+
+Reproduced before fixing: reduced motion still pinned/animated the desktop
+track and left 15 copy blocks transparent until scroll reveals; scrolling back
+from the finale hid its focused author link and dropped focus to the page.
+The narrow “What's next?” heading also clipped at the right edge.
+
+The author link now lives in a normal footer, with an explicit focus outline.
+A shared CSS media variant keeps the desktop story layout aligned with GSAP's
+motion query. Reduced motion bypasses chapter reveals and the finale masks,
+uses native scrolling instead of Lenis, and disables the loader, hero scaling,
+and adjacent editorial reveals. Preference changes clean up the previous GSAP
+branch without requiring a reload.
+
+Verification: Page Down reached the intro, all five historical chapters and R26
+in all four combinations. Checked Tab/Shift+Tab between the header and footer,
+visible focus, Enter activation of both links, Page Up/backward exit, Home/End,
+and Space/arrow scrolling. There are no timeline buttons: links activate with
+Enter, while Space scrolls. Tab brings the footer link onscreen, and it stays
+available when scrolling back. Checked live motion changes and resizing between
+layouts. Build, TypeScript and ESLint checks pass. This is a focused single-browser
+audit, not a screen-reader, zoom, contrast or cross-browser certification.
+
+[Reduced-motion finale and keyboard focus](docs/screenshots/timeline-reduced-motion.jpg)
 
 ## Performance notes
 

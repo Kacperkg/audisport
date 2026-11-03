@@ -9,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 const DESKTOP_SCROLL_PACE = 0.78
 const DESKTOP_FINALE_DISTANCE = 0.72
+const DESKTOP_FINALE_HOLD = 1
 
 type F1AnimationTargets = {
   stage: HTMLElement | null
@@ -170,101 +171,122 @@ export function useStoryAnimation(
       return { f1, revealActiveItems, revealItem, revealOnScroll }
     }
 
-    media.add('(min-width: 1536px)', () => {
-      const revealController = createRevealController()
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: () =>
-            `+=${
-              getScrollDistance() * DESKTOP_SCROLL_PACE +
-              window.innerHeight * DESKTOP_FINALE_DISTANCE
-            }`,
-          pin: true,
-          scrub: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onRefresh: revealController.revealActiveItems,
-          onUpdate: revealController.revealActiveItems,
-        },
-      })
-
-      timeline.to(
-        track,
-        {
-          x: () => -getScrollDistance(),
-          ease: 'none',
-          duration: getScrollDistance,
-        },
-        0,
-      )
-
-      const viewportHeight = window.innerHeight
-      appendF1RevealAnimation(
-        timeline,
-        revealController.f1,
-        {
-          question: viewportHeight * 0.14,
-          masks: viewportHeight * 0.42,
-          maskStagger: viewportHeight * 0.07,
-          rule: viewportHeight * 0.05,
-          label: viewportHeight * 0.06,
-          titleIn: viewportHeight * 0.06,
-          titleOut: viewportHeight * 0.08,
-          support: viewportHeight * 0.05,
-        },
-        -20,
-      )
-    })
-
-    media.add('(max-width: 1535px)', () => {
-      const revealController = createRevealController()
-
-      gsap.set(track, { clearProps: 'transform' })
-      revealController.revealOnScroll()
-
-      if (revealController.f1.stage && revealController.f1.endMarker) {
+    media.add(
+      '(min-width: 1536px) and (prefers-reduced-motion: no-preference)',
+      () => {
+        const revealController = createRevealController()
         const timeline = gsap.timeline({
           scrollTrigger: {
-            trigger: revealController.f1.stage,
-            endTrigger: revealController.f1.endMarker,
+            trigger: section,
             start: 'top top',
-            end: 'top bottom',
-            scrub: 0.35,
+            end: () =>
+              `+=${
+                getScrollDistance() * DESKTOP_SCROLL_PACE +
+                window.innerHeight *
+                  (DESKTOP_FINALE_DISTANCE + DESKTOP_FINALE_HOLD)
+              }`,
+            pin: true,
+            scrub: true,
+            anticipatePin: 1,
             invalidateOnRefresh: true,
+            onRefresh: revealController.revealActiveItems,
+            onUpdate: revealController.revealActiveItems,
           },
         })
 
+        timeline.to(
+          track,
+          {
+            x: () => -getScrollDistance(),
+            ease: 'none',
+            duration: getScrollDistance,
+          },
+          0,
+        )
+
+        const viewportHeight = window.innerHeight
         appendF1RevealAnimation(
           timeline,
           revealController.f1,
           {
-            question: 0.26,
-            masks: 0.64,
-            maskStagger: 0.08,
-            rule: 0.08,
-            label: 0.1,
-            titleIn: 0.1,
-            titleOut: 0.12,
-            support: 0.1,
+            question: viewportHeight * 0.14,
+            masks: viewportHeight * 0.42,
+            maskStagger: viewportHeight * 0.07,
+            rule: viewportHeight * 0.05,
+            label: viewportHeight * 0.06,
+            titleIn: viewportHeight * 0.06,
+            titleOut: viewportHeight * 0.08,
+            support: viewportHeight * 0.05,
           },
-          -16,
+          -20,
         )
-      }
 
-      const firstPanelItems = gsap.utils.toArray<HTMLElement>(
-        track.querySelectorAll(
-          '[data-story-panel]:first-child [data-story-reveal-item]',
-        ),
-      )
+        // Keep the fully revealed car and copy pinned for another viewport of
+        // scrolling before the footer enters, without slowing the reveal itself.
+        const revealScrollDistance =
+          getScrollDistance() * DESKTOP_SCROLL_PACE +
+          viewportHeight * DESKTOP_FINALE_DISTANCE
+        timeline.to(
+          {},
+          {
+            duration:
+              timeline.duration() *
+              ((viewportHeight * DESKTOP_FINALE_HOLD) / revealScrollDistance),
+          },
+        )
+      },
+    )
 
-      firstPanelItems.forEach((item) => {
-        if (item.getBoundingClientRect().top < window.innerHeight) {
-          revealController.revealItem(item)
+    media.add(
+      '(max-width: 1535px) and (prefers-reduced-motion: no-preference)',
+      () => {
+        const revealController = createRevealController()
+
+        gsap.set(track, { clearProps: 'transform' })
+        revealController.revealOnScroll()
+
+        if (revealController.f1.stage && revealController.f1.endMarker) {
+          const timeline = gsap.timeline({
+            scrollTrigger: {
+              trigger: revealController.f1.stage,
+              endTrigger: revealController.f1.endMarker,
+              start: 'top top',
+              end: 'top bottom',
+              scrub: 0.35,
+              invalidateOnRefresh: true,
+            },
+          })
+
+          appendF1RevealAnimation(
+            timeline,
+            revealController.f1,
+            {
+              question: 0.26,
+              masks: 0.64,
+              maskStagger: 0.08,
+              rule: 0.08,
+              label: 0.1,
+              titleIn: 0.1,
+              titleOut: 0.12,
+              support: 0.1,
+            },
+            -16,
+          )
         }
-      })
-    })
+
+        const firstPanelItems = gsap.utils.toArray<HTMLElement>(
+          track.querySelectorAll(
+            '[data-story-panel]:first-child [data-story-reveal-item]',
+          ),
+        )
+
+        firstPanelItems.forEach((item) => {
+          if (item.getBoundingClientRect().top < window.innerHeight) {
+            revealController.revealItem(item)
+          }
+        })
+      },
+    )
 
     return () => media.revert()
   }, [])

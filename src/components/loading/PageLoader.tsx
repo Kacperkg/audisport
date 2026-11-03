@@ -10,6 +10,15 @@ export default function PageLoader() {
   const [isLoading, setIsLoading] = useState(true)
 
   useGSAP(() => {
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (motion.matches) {
+      setIsLoading(false)
+      return
+    }
+    const finish = () => {
+      if (motion.matches) setIsLoading(false)
+    }
+    motion.addEventListener('change', finish)
     const timeline = gsap.timeline()
 
     circlesRef.current.forEach((circle, index) => {
@@ -46,7 +55,10 @@ export default function PageLoader() {
       timeline.duration() * 1000,
     )
 
-    return () => window.clearTimeout(hideTimer)
+    return () => {
+      window.clearTimeout(hideTimer)
+      motion.removeEventListener('change', finish)
+    }
   }, [])
 
   if (!isLoading) return null

@@ -7,36 +7,39 @@ const MASK_OVERLAP_PX = 2
 export default function FormulaOneChapter() {
   return (
     <article
-      className="relative h-[260svh] w-full shrink-0 bg-black text-white 2xl:h-full 2xl:w-screen"
+      className="relative h-[360svh] w-full shrink-0 bg-black text-white story-wide:h-full story-wide:w-screen"
       data-header-theme="dark"
       data-f1-stage
       data-story-panel
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 -left-1 z-50 hidden w-2 bg-black 2xl:block"
+        className="pointer-events-none absolute inset-y-0 -left-1 z-50 hidden w-2 bg-black story-wide:block"
       />
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-[20svh] h-px 2xl:hidden"
+        className="pointer-events-none absolute inset-x-0 bottom-[120svh] h-px story-wide:hidden"
         data-f1-scroll-end
       />
 
-      <div className="sticky top-0 flex h-[100lvh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 2xl:relative 2xl:h-full 2xl:px-20 2xl:py-0">
+      <div className="f1-viewport sticky top-0 flex h-[100lvh] w-full items-center justify-center overflow-hidden px-6 py-24 text-center sm:px-10 story-wide:relative story-wide:h-full story-wide:px-20 story-wide:py-0">
         <div
-          className="absolute inset-x-0 top-0 z-40 flex h-[100svh] items-center justify-center px-6 sm:px-10 2xl:relative 2xl:inset-auto 2xl:h-auto 2xl:px-0"
+          className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-[100svh] items-center justify-center px-6 sm:px-10 story-wide:relative story-wide:inset-auto story-wide:h-auto story-wide:px-0"
           data-f1-question
         >
           <WipeText
             as="h2"
-            className="whitespace-nowrap text-[13vw] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white sm:text-[11vw] 2xl:text-[9vw]"
+            className="whitespace-nowrap text-[11vw] font-black uppercase leading-[0.82] tracking-[-0.055em] text-white sm:text-[11vw] story-wide:text-[9vw]"
           >
             What's next<span className="text-red-500">?</span>
           </WipeText>
         </div>
 
-        <div className="absolute inset-0 z-20">
+        <div
+          className="f1-image-stage absolute inset-0 z-20"
+          data-header-theme="light"
+        >
           <img
             alt="Audi R26 Formula 1 car in its special 2026 Singapore livery"
             className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
@@ -51,6 +54,7 @@ export default function FormulaOneChapter() {
               aria-hidden="true"
               className="absolute inset-x-0 origin-top bg-black will-change-transform [backface-visibility:hidden]"
               data-f1-mask
+              data-header-theme="dark"
               style={{
                 height: `calc(${REVEAL_ROW_HEIGHT}% + ${MASK_OVERLAP_PX * 2}px)`,
                 top: `calc(${index * REVEAL_ROW_HEIGHT}% - ${MASK_OVERLAP_PX}px)`,
@@ -59,11 +63,12 @@ export default function FormulaOneChapter() {
           ))}
 
           <div
-            className="absolute inset-x-0 top-0 z-30 h-[100svh] text-left text-black 2xl:inset-0 2xl:h-auto"
+            className="absolute inset-x-0 top-0 z-30 h-[100svh] text-left text-black story-wide:inset-0 story-wide:h-auto"
             data-f1-copy-overlay
             data-header-theme="light"
           >
-            <div className="absolute left-6 top-28 sm:left-10 sm:top-32 2xl:left-20">
+            {/* Leave header clearance when the footer scrolls the stage upward. */}
+            <div className="absolute left-6 top-48 sm:left-10 sm:top-52 story-wide:left-20">
               <div className="h-px w-16 bg-red-600 sm:w-24" data-f1-copy-rule />
               <p
                 className="font-jetbrains mt-4 text-[10px] font-semibold uppercase leading-5 tracking-[0.24em] sm:text-xs"
@@ -75,8 +80,8 @@ export default function FormulaOneChapter() {
               </p>
             </div>
 
-            <div className="absolute bottom-10 left-6 sm:bottom-12 sm:left-10 2xl:bottom-16 2xl:left-20">
-              <h2 className="relative inline-block overflow-hidden text-7xl font-black uppercase leading-[0.78] tracking-[-0.06em] sm:text-9xl 2xl:text-[10rem]">
+            <div className="absolute bottom-10 left-6 sm:bottom-12 sm:left-10 story-wide:bottom-16 story-wide:left-20">
+              <h2 className="relative inline-block overflow-hidden text-7xl font-black uppercase leading-[0.78] tracking-[-0.06em] sm:text-9xl story-wide:text-[10rem]">
                 <span data-f1-title-content>
                   R26<span className="text-red-600">.</span>
                 </span>
@@ -93,16 +98,6 @@ export default function FormulaOneChapter() {
                 Built to challenge.
               </p>
             </div>
-
-            <a
-              className="font-jetbrains absolute bottom-8 right-6 text-right text-[8px] uppercase leading-4 tracking-[0.18em] text-black/40 transition-colors hover:text-black/70 sm:bottom-10 sm:right-10 sm:text-[9px] 2xl:bottom-14 2xl:right-20"
-              href="https://kacpergajdarski.com/"
-              rel="author"
-            >
-              Independent project by
-              <br />
-              Kacper Gajdarski
-            </a>
           </div>
         </div>
       </div>
