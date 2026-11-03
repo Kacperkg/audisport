@@ -41,11 +41,26 @@ export function useHeaderTheme(headerRef: RefObject<HTMLElement | null>) {
       animationFrame = window.requestAnimationFrame(updateTextColor)
     }
 
+    // A scrubbed reveal can finish after the last scroll event. Re-sample when
+    // a themed layer changes visibility or position, including on reverse scroll.
+    const observer = new MutationObserver(queueUpdate)
+    const resizeObserver = new ResizeObserver(queueUpdate)
+    document.querySelectorAll('[data-header-theme]').forEach((element) => {
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['style', 'data-header-theme'],
+      })
+      // Lazy-loaded images can change the layer under a stationary header.
+      resizeObserver.observe(element)
+    })
+
     queueUpdate()
     window.addEventListener('scroll', queueUpdate, { passive: true })
     window.addEventListener('resize', queueUpdate)
 
     return () => {
+      observer.disconnect()
+      resizeObserver.disconnect()
       window.cancelAnimationFrame(animationFrame)
       window.removeEventListener('scroll', queueUpdate)
       window.removeEventListener('resize', queueUpdate)

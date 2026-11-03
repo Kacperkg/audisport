@@ -211,3 +211,96 @@ body:has(.page-loader) .hero-scale-target {
     }
   }
 }
+
+/* Keep the CSS layout and GSAP media branches in sync. */
+@custom-variant story-wide {
+  @media (min-width: 1536px) and (prefers-reduced-motion: no-preference) {
+    @slot;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-story-section] [data-reveal-type='soft'] {
+    opacity: 1;
+    transform: none;
+    translate: none;
+  }
+
+  [data-f1-stage] {
+    height: auto;
+  }
+
+  .f1-viewport {
+    position: relative;
+    height: auto;
+    display: block;
+    padding: 0;
+  }
+
+  [data-f1-question] {
+    position: relative;
+    height: auto;
+    padding: 6rem 1.5rem;
+  }
+
+  .f1-image-stage {
+    position: relative;
+  }
+
+  .f1-image-stage > img {
+    position: relative;
+    height: auto;
+  }
+
+  [data-f1-mask],
+  [data-f1-scroll-end] {
+    display: none;
+  }
+
+  [data-f1-copy-overlay] {
+    position: relative;
+    height: auto;
+    padding: 3rem 1.5rem;
+    background: #f8f6f2;
+  }
+
+  [data-f1-copy-overlay] > div {
+    position: static;
+  }
+
+  [data-f1-copy-overlay] > div + div {
+    margin-top: 3rem;
+  }
+
+  .hero-scroll-stage {
+    min-height: 0;
+  }
+
+  .hero-scroll-stage > div {
+    position: relative;
+    height: auto;
+  }
+
+  .hero-scale-target {
+    min-height: 100svh;
+    transform: none !important;
+  }
+
+  .hero-scale-target + div {
+    position: relative;
+    height: 24rem;
+  }
+
+  [data-line-cover] {
+    display: none;
+  }
+
+  [data-letter] {
+    color: black;
+  }
+}

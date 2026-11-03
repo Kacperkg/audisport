@@ -23,31 +23,35 @@ export default function Hero() {
   useGSAP(() => {
     if (!sectionRef.current || !imageRef.current) return
 
-    const usesNativeWebKitScrollAnimation =
-      window.matchMedia('(max-width: 1023px)').matches &&
-      window.matchMedia('(prefers-reduced-motion: no-preference)').matches &&
-      CSS.supports('-webkit-touch-callout', 'none') &&
-      CSS.supports('animation-timeline', 'view()')
+    const media = gsap.matchMedia()
+    media.add('(prefers-reduced-motion: no-preference)', () => {
+      const usesNativeWebKitScrollAnimation =
+        window.matchMedia('(max-width: 1023px)').matches &&
+        window.matchMedia('(prefers-reduced-motion: no-preference)').matches &&
+        CSS.supports('-webkit-touch-callout', 'none') &&
+        CSS.supports('animation-timeline', 'view()')
 
-    if (usesNativeWebKitScrollAnimation) return
+      if (usesNativeWebKitScrollAnimation) return
 
-    gsap.fromTo(
-      imageRef.current,
-      { scale: 1 },
-      {
-        scale: 0.3,
-        force3D: true,
-        transformOrigin: 'center center',
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: true,
-          invalidateOnRefresh: true,
+      gsap.fromTo(
+        imageRef.current,
+        { scale: 1 },
+        {
+          scale: 0.3,
+          force3D: true,
+          transformOrigin: 'center center',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
         },
-      },
-    )
+      )
+    })
+    return () => media.revert()
   }, [])
 
   return (

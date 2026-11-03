@@ -85,34 +85,38 @@ export const CHAPTER_LAYOUTS: Record<
   { year: string; copy: string; image: string; imageFrame: string }
 > = {
   'split-right': {
-    year: 'left-6 top-12 2xl:left-20',
-    copy: '2xl:col-span-4 2xl:col-start-2',
-    image: 'items-center 2xl:col-span-5 2xl:col-start-8',
-    imageFrame: 'h-[42vh] w-full 2xl:h-[66vh]',
+    year: 'left-6 top-12 story-wide:left-20',
+    copy: 'story-wide:col-span-4 story-wide:col-start-2',
+    image: 'items-center story-wide:col-span-5 story-wide:col-start-8',
+    imageFrame: 'h-[42vh] w-full story-wide:h-[66vh]',
   },
   'image-left': {
-    year: 'right-6 top-14 2xl:right-24',
-    copy: '2xl:col-span-4 2xl:col-start-8',
-    image: 'items-center 2xl:col-span-5 2xl:col-start-2 2xl:-translate-y-24',
-    imageFrame: 'h-[42vh] w-full 2xl:h-[66vh]',
+    year: 'right-6 top-14 story-wide:right-24',
+    copy: 'story-wide:col-span-4 story-wide:col-start-8',
+    image:
+      'items-center story-wide:col-span-5 story-wide:col-start-2 story-wide:-translate-y-24',
+    imageFrame: 'h-[42vh] w-full story-wide:h-[66vh]',
   },
   centered: {
-    year: 'left-6 top-12 2xl:left-20',
-    copy: '2xl:col-span-5 2xl:col-start-5 2xl:items-center 2xl:text-center',
-    image: 'items-end 2xl:col-span-9 2xl:col-start-2 2xl:row-start-1 2xl:pb-14',
-    imageFrame: 'h-[26vh] w-full 2xl:h-[18vh]',
+    year: 'left-6 top-12 story-wide:left-20',
+    copy: 'story-wide:col-span-5 story-wide:col-start-5 story-wide:items-center story-wide:text-center',
+    image:
+      'items-end story-wide:col-span-9 story-wide:col-start-2 story-wide:row-start-1 story-wide:pb-14',
+    imageFrame: 'h-[26vh] w-full story-wide:h-[18vh]',
   },
   'wide-image': {
-    year: 'left-6 top-12 2xl:left-20',
-    copy: '2xl:col-span-4 2xl:col-start-2',
-    image: 'items-end 2xl:col-span-6 2xl:col-start-7 2xl:pb-20',
-    imageFrame: 'h-[34vh] w-full 2xl:h-[42vh]',
+    year: 'left-6 top-12 story-wide:left-20',
+    copy: 'story-wide:col-span-4 story-wide:col-start-2',
+    image:
+      'items-end story-wide:col-span-6 story-wide:col-start-7 story-wide:pb-20',
+    imageFrame: 'h-[34vh] w-full story-wide:h-[42vh]',
   },
   offset: {
-    year: 'left-6 top-12 2xl:left-20',
-    copy: '2xl:col-span-4 2xl:col-start-2 2xl:justify-end 2xl:pb-24',
-    image: 'items-start 2xl:col-span-5 2xl:col-start-8 2xl:pt-24',
-    imageFrame: 'h-[42vh] w-[74%] 2xl:h-[52vh]',
+    year: 'left-6 top-12 story-wide:left-20',
+    copy: 'story-wide:col-span-4 story-wide:col-start-2 story-wide:justify-end story-wide:pb-24',
+    image:
+      'items-start story-wide:col-span-5 story-wide:col-start-8 story-wide:pt-24',
+    imageFrame: 'h-[42vh] w-[74%] story-wide:h-[52vh]',
   },
 }
 
