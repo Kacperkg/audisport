@@ -6,6 +6,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -95,6 +96,8 @@ def deploy(target, encoded):
              for name in ("deploy.py", "manifest.py", "compose.yml")}
     wire = module("audi_manifest", files["manifest.py"])
     raw = base64.b64decode(encoded, validate=True)
+    if target == "production":
+        raw, issued_at, expires_at = wire.read_production_request(raw, time.time())
     manifest = wire.read_manifest(raw)
     require(manifest["bundle"] == {name: wire.digest(data) for name, data in files.items()},
             "installed bundle does not match the release")
@@ -131,6 +134,8 @@ def deploy(target, encoded):
             "environment": target, "manifest_sha256": wire.digest(raw),
             "previous_image_id": previous[2], "image": image, "source_sha": source,
         }
+        if target == "production":
+            wire.require_production_time(issued_at, expires_at, time.time())
         start()
         persist(pending, wire.canonical(attempt))
         command(docker + ["pull", "--platform", "linux/amd64", image], env, "digest pull", 120)

@@ -2,25 +2,10 @@ name: Promote Audi production
 on:
   workflow_dispatch:
     inputs:
-      main_sha:
-        description: Reviewed current main commit SHA
-        type: string
-        required: true
-      staging_run_id:
-        description: Successful staging workflow run ID
-        type: string
-        required: true
-      staging_attempt:
-        description: Successful staging workflow run attempt
-        type: string
-        required: true
-      window_end_utc:
-        description: Maintenance window end in UTC (YYYY-MM-DDTHH:MM:SSZ)
-        type: string
-        required: true
-      confirmation:
-        description: Type PROMOTE AUDI PRODUCTION
-        type: string
+      confirm_production_deployment:
+        description: Deploy the verified staging image now and stay available for recovery
+        type: boolean
+        default: false
         required: true
 
 permissions: {}
@@ -35,8 +20,7 @@ jobs:
       github.repository == 'Kacperkg/audisport' &&
       github.ref == 'refs/heads/main' && github.ref_protected &&
       vars.AUDI_PRODUCTION_DEPLOY_ENABLED == 'true' &&
-      inputs.confirmation == 'PROMOTE AUDI PRODUCTION' &&
-      inputs.main_sha == github.sha
+      inputs.confirm_production_deployment && github.run_attempt == '1'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: Production
@@ -46,10 +30,10 @@ jobs:
       id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
-      EXPECTED_MAIN_SHA: ${{ inputs.main_sha }}
-      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
-      STAGING_ATTEMPT: ${{ inputs.staging_attempt }}
-      WINDOW_END_UTC: ${{ inputs.window_end_utc }}
+      AUDI_PRODUCTION_CONFIRMATION: ${{ inputs.confirm_production_deployment }}
+      AUDI_PRODUCTION_DEPLOY_ENABLED: ${{ vars.AUDI_PRODUCTION_DEPLOY_ENABLED }}
+      AUDI_STAGING_DOCUMENT_VERSION: ${{ vars.AUDI_STAGING_DOCUMENT_VERSION }}
+      AUDI_STAGING_DOCUMENT_SHA256: ${{ vars.AUDI_STAGING_DOCUMENT_SHA256 }}
       AUDI_AWS_ACCOUNT_ID: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
       AUDI_INSTANCE_ID: ${{ vars.AUDI_INSTANCE_ID }}
       AUDI_DOCUMENT: ${{ vars.AUDI_DOCUMENT }}
@@ -60,8 +44,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate the exact staging artifact and reviewed main tree
-        run: python3 deploy/release.py select "$STAGING_RUN_ID" "$STAGING_ATTEMPT" "$EXPECTED_MAIN_SHA" candidate.json
+      - name: Resolve the unique staging release for this main commit
+        run: python3 deploy/release.py select selection.json
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           aws-region: eu-west-2
@@ -69,7 +53,14 @@ jobs:
           allowed-account-ids: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
           role-duration-seconds: 900
           role-session-name: audi-production-${{ github.run_id }}-${{ github.run_attempt }}
-      - run: python3 deploy/release.py dispatch production candidate.json evidence
+      - name: Revalidate selection and dispatch production
+        id: dispatch
+        run: python3 deploy/release.py dispatch production selection.json evidence
+      - name: Summarize deployment result
+        if: always()
+        env:
+          RESULT: ${{ steps.dispatch.outcome }}
+        run: python3 deploy/release.py summarize "$RESULT" evidence
       - name: Publish the production receipt
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -78,6 +69,7 @@ jobs:
             evidence/manifest.json
             evidence/receipt.json
             evidence/deployment.json
+            evidence/selection.json
           if-no-files-found: error
           retention-days: 30
       - name: Preserve command status

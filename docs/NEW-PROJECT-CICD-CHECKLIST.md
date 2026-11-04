@@ -35,9 +35,12 @@
    public health, capture prior images and exercise negative cases in an
    isolated environment. Review fail-closed recovery before production.
 8. **Production**. Require a protected reviewed commit, explicit manual
-   confirmation, the exact eligible staging artifact and approved timing.
-   Preserve digest, command and host receipts. Verify the public upstream.
-   Document and rehearse project-only recovery using retained images.
+   confirmation and an automatically resolved, unique staging artifact for
+   the same tree and a tested ancestor. Recheck the branch tip and evidence
+   at dispatch. Bound confirmation age and command execution, enforce expiry
+   on the host and record durable attempt evidence. Preserve digest, command
+   and host receipts. Verify the public upstream and rehearse project-only
+   recovery using retained images.
 9. **Operations and costs**. Record resource owners, AWS region, storage,
    runner and transfer usage, measured resource headroom, retention and
    escalation contacts. Teardown only project-owned resources after checking

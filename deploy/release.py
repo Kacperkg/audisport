@@ -8,16 +8,19 @@ import sys
 import time
 import uuid
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 
 from manifest import (
-    HASH, IMAGE, REPOSITORY, ROUTES, SHA, canonical, digest, matches, read_manifest,
-    require, source_bundle,
+    HASH, PRODUCTION_VALIDITY_SECONDS, REPOSITORY, ROUTES, SHA, SSM_DELIVERY_SECONDS,
+    canonical, digest, matches, production_request, read_manifest, require, source_bundle,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 STAGING_WORKFLOW = "release-staging.yml"
+STAGING_JOBS = ("ci / Application", "ci / Deployment configuration", "publish", "deploy")
+CONFIRMATION_SECONDS = 20 * 60
 MEMBERS = ("manifest.json", "receipt.json", "deployment.json")
 
 
@@ -110,60 +113,211 @@ def archive_members(archive, expected_hash):
         return {entry.filename: contents.read(entry) for entry in entries}
 
 
-def require_main(expected):
-    require(matches(SHA, expected) and os.environ["GITHUB_SHA"] == expected
-            and os.environ["GITHUB_REPOSITORY"] == REPOSITORY
+def require_main():
+    sha = os.environ["GITHUB_SHA"]
+    require(matches(SHA, sha) and os.environ["GITHUB_REPOSITORY"] == REPOSITORY
             and os.environ["GITHUB_REF"] == "refs/heads/main"
-            and os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch",
-            "dispatch must use the exact expected main SHA")
-    branch_tip("main", expected)
+            and os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch"
+            and os.environ.get("GITHUB_RUN_ATTEMPT") == "1"
+            and os.environ.get("AUDI_PRODUCTION_CONFIRMATION") == "true"
+            and os.environ.get("AUDI_PRODUCTION_DEPLOY_ENABLED") == "true",
+            "production requires a fresh confirmed dispatch on protected main with deployment enabled")
+    branch_tip("main", sha)
+    return sha
 
 
-def select(run_id, attempt, expected, output):
-    require_main(expected)
-    run = json.loads(github(f"actions/runs/{run_id}"))
-    workflow = json.loads(github(f"actions/workflows/{STAGING_WORKFLOW}"))
-    require(run["id"] == run_id and run["workflow_id"] == workflow["id"]
-            and run["event"] == "push" and run["head_branch"] == "staging"
-            and run["run_attempt"] == attempt and run["status"] == "completed"
-            and run["conclusion"] == "success"
+def run_identity(run, workflow_id, branch, event):
+    return (run["workflow_id"] == workflow_id and run["event"] == event
+            and run["head_branch"] == branch and matches(SHA, run["head_sha"])
             and run["head_repository"]["full_name"] == REPOSITORY
-            and run["repository"]["full_name"] == REPOSITORY, "ineligible staging run")
+            and run["repository"]["full_name"] == REPOSITORY)
+
+
+def confirmation_expiry(sha):
+    run_id = positive(os.environ["GITHUB_RUN_ID"])
+    run = json.loads(github(f"actions/runs/{run_id}"))
+    workflow = json.loads(github("actions/workflows/release-production.yml"))
+    require(run["id"] == run_id and run_identity(run, workflow["id"], "main", "workflow_dispatch")
+            and run["head_sha"] == sha and run["run_attempt"] == 1 and run["status"] == "in_progress",
+            "GitHub production dispatch identity changed")
+    created = github_time(run["created_at"])
+    require(created <= time.time(), "production confirmation timestamp is in the future")
+    return created + CONFIRMATION_SECONDS
+
+
+def github_time(value):
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+
+
+def staged_runs(workflow_id):
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    query = urlencode({"branch": "staging", "event": "push", "created": ">=" + cutoff, "per_page": 100})
+    runs = {}
+    total = None
+    for page in range(1, 4):
+        result = json.loads(github(f"actions/workflows/{workflow_id}/runs?{query}&page={page}"))
+        if total is None:
+            total = result["total_count"]
+        require(type(total) is int and 0 <= total <= 300,
+                "staging search exceeded 300 pushes in 30 days; no safe selection")
+        items = result["workflow_runs"]
+        require(result["total_count"] == total and len(items) == min(100, total - len(runs)),
+                "staging search changed or was truncated")
+        for run in items:
+            require(type(run["id"]) is int and run["id"] > 0 and run["id"] not in runs
+                    and run_identity(run, workflow_id, "staging", "push")
+                    and github_time(run["created_at"]) >= github_time(cutoff),
+                    "unexpected staging workflow run identity or pagination")
+            runs[run["id"]] = run
+        if len(runs) == total:
+            return runs.values()
+    raise ValueError("staging search did not complete")
+
+
+def staging_jobs(run):
+    run_id, attempt = run["id"], run["run_attempt"]
+    require(type(attempt) is int and attempt > 0, "invalid latest staging attempt")
+    result = json.loads(github(f"actions/runs/{run_id}/attempts/{attempt}/jobs?per_page=100"))
+    jobs = result["jobs"]
+    require(result["total_count"] == len(jobs) <= 100, "staging attempt job list was truncated")
+    seen = {}
+    for job in jobs:
+        require(job["run_id"] == run_id and job["head_sha"] == run["head_sha"]
+                and job["run_attempt"] == attempt and job["name"] not in seen,
+                "unexpected or duplicate staging attempt job")
+        seen[job["name"]] = (job["status"], job["conclusion"])
+    return all(seen.get(name) == ("completed", "success") for name in STAGING_JOBS)
+
+
+def staging_artifact(run, main, tree):
+    run_id, attempt = run["id"], run["run_attempt"]
     name = artifact_name(run_id, attempt)
     artifacts = json.loads(github(f"actions/runs/{run_id}/artifacts?name={name}"))
     require(artifacts["total_count"] == 1 and len(artifacts["artifacts"]) == 1,
-            "exact staged artifact required")
+            "matching staging deployment has no unique promotion artifact")
     artifact = artifacts["artifacts"][0]
-    require(artifact["name"] == name and artifact["expired"] is False
+    require(type(artifact["id"]) is int and artifact["id"] > 0
+            and artifact["name"] == name and artifact["expired"] is False
             and 0 < artifact["size_in_bytes"] <= 65536
-            and matches("sha256:" + HASH, artifact.get("digest")), "invalid artifact metadata")
+            and matches("sha256:" + HASH, artifact.get("digest")), "invalid or expired staging artifact")
+    identity = artifact.get("workflow_run")
+    if identity is not None:
+        require(identity["id"] == run_id and identity["head_branch"] == "staging"
+                and identity["head_sha"] == run["head_sha"]
+                and identity["repository_id"] == run["repository"]["id"]
+                and identity["head_repository_id"] == run["head_repository"]["id"],
+                "artifact workflow run identity mismatch")
     files = archive_members(github(f'actions/artifacts/{artifact["id"]}/zip'), artifact["digest"][7:])
     raw = files["manifest.json"]
     manifest = read_manifest(raw)
     require(manifest["run_id"] == run_id and manifest["run_attempt"] == attempt
             and manifest["source_sha"] == run["head_sha"], "manifest/run identity mismatch")
+    require(manifest["bundle"] == source_bundle(ROOT), "reviewed deployment bundle differs")
     receipt = files["receipt.json"]
     read_receipt(receipt, raw, "staging")
     deployment = read_deployment(files["deployment.json"], "staging")
+    production_document = os.environ["AUDI_DOCUMENT"]
+    require(matches(r"[a-z][a-z0-9-]{1,23}-deploy-production", production_document),
+            "invalid production SSM document name")
+    staging_document = production_document.removesuffix("production") + "staging"
     require(deployment["dispatch_sha"] == manifest["source_sha"]
             and deployment["instance_id"] == os.environ["AUDI_INSTANCE_ID"]
+            and deployment["document"] == staging_document
+            and deployment["document_version"] == os.environ["AUDI_STAGING_DOCUMENT_VERSION"]
+            and deployment["document_hash"] == os.environ["AUDI_STAGING_DOCUMENT_SHA256"]
             and deployment["manifest_sha256"] == digest(raw)
-            and deployment["receipt_sha256"] == digest(receipt), "staging invocation mismatch")
-    source = manifest["source_sha"]
-    process(["git", "merge-base", "--is-ancestor", source, expected])
-    require(process(["git", "rev-parse", f"{source}^{{tree}}"]) ==
-            process(["git", "rev-parse", f"{expected}^{{tree}}"]), "main and staging trees differ")
-    require(manifest["bundle"] == source_bundle(ROOT), "reviewed deployment bundle differs")
-    output.write_bytes(raw)
+            and deployment["receipt_sha256"] == digest(receipt), "staging invocation or approved document pin mismatch")
+    return {
+        "main_sha": main, "tree": tree, "manifest": manifest, "manifest_sha256": digest(raw),
+        "artifact_id": artifact["id"], "archive_digest": artifact["digest"],
+        "staging_receipt_sha256": digest(receipt), "staging_command_id": deployment["command_id"],
+    }
 
 
-def require_window():
-    end = datetime.strptime(os.environ["WINDOW_END_UTC"], "%Y-%m-%dT%H:%M:%SZ")
-    remaining = (end.replace(tzinfo=timezone.utc) - datetime.now(timezone.utc)).total_seconds()
-    require(540 <= remaining <= 3600, "production requires a maintenance window ending in 9–60 minutes")
+def resolve(main):
+    require(process(["git", "rev-parse", "HEAD"]).decode().strip() == main
+            and process(["git", "rev-parse", "--is-shallow-repository"]).strip() == b"false",
+            "promotion requires a full checkout of the dispatch commit")
+    tree = process(["git", "rev-parse", f"{main}^{{tree}}"]).decode().strip()
+    # Enumerate only ancestors of the reviewed commit, including the commit itself.
+    history = process(["git", "log", "--format=%H:%T", "--no-show-signature", main]).decode().splitlines()
+    equivalent = {sha for sha, ancestor_tree in (line.split(":") for line in history) if ancestor_tree == tree}
+    staging = json.loads(github("branches/staging"))
+    require(staging["protected"] is True, "staging must still be protected")
+    workflow_id = json.loads(github(f"actions/workflows/{STAGING_WORKFLOW}"))["id"]
+    require(type(workflow_id) is int and workflow_id > 0, "invalid staging workflow identity")
+    selected = None
+    for run in staged_runs(workflow_id):
+        if (run["head_sha"] not in equivalent or run["status"] != "completed"
+                or run["conclusion"] != "success" or not staging_jobs(run)):
+            continue
+        require(selected is None, "multiple eligible staging deployments match main; promotion is ambiguous")
+        selected = staging_artifact(run, main, tree)
+    require(selected is not None,
+            "no eligible staging release in the last 30 days; merge a successful staged ancestor with the same tree")
+    manifest = selected["manifest"]
+    try:
+        process(["docker", "buildx", "imagetools", "inspect", manifest["image"]])
+    except subprocess.CalledProcessError:
+        raise ValueError("verified staging digest is unavailable for anonymous pull") from None
+    latest = json.loads(github(f'actions/runs/{manifest["run_id"]}'))
+    require(run_identity(latest, workflow_id, "staging", "push")
+            and latest["id"] == manifest["run_id"] and latest["run_attempt"] == manifest["run_attempt"]
+            and latest["head_sha"] == manifest["source_sha"] and latest["status"] == "completed"
+            and latest["conclusion"] == "success", "selected staging run changed or was rerun")
+    return selected
+
+
+def require_coverage(expires, now):
+    require(now + PRODUCTION_VALIDITY_SECONDS <= expires,
+            "production confirmation is too old for a full deployment; submit a fresh dispatch")
+
+
+def select(output):
+    main = require_main()
+    expires = confirmation_expiry(main)
+    require_coverage(expires, time.time())
+    selected = resolve(main)
+    branch_tip("main", main)
+    require_coverage(expires, time.time())
+    output.write_bytes(canonical(selected))
+    manifest = selected["manifest"]
+    summary(
+        "## Selected Audi staging release\n"
+        f'- [Staging run {manifest["run_id"]}, attempt {manifest["run_attempt"]}]'
+        f'(https://github.com/{REPOSITORY}/actions/runs/{manifest["run_id"]})\n'
+        f'- Main commit `{main}` and staged ancestor `{manifest["source_sha"]}` share tree `{selected["tree"]}`.\n'
+        f'- Image `{manifest["image"]}`\n'
+        f'- Artifact {selected["artifact_id"]}, archive digest `{selected["archive_digest"]}`\n'
+        f'- Verified the required jobs, approved staging document pin, target-specific HTTPS receipt and anonymous digest access.\n'
+        f'- Receipt SHA-256 `{selected["staging_receipt_sha256"]}`\n'
+    )
+
+
+def summary(message):
+    with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as output:
+        output.write(message + "\n")
+
+
+def summarize(outcome, evidence):
+    status = evidence / "status.json"
+    message = f"## Audi production result\n- Dispatch step: **{outcome or 'skipped'}**\n"
+    if status.exists():
+        result = json.loads(status.read_bytes())
+        message += f'- SSM command `{result["command_id"]}`, last observed status **{result["status"]}**\n'
+    if (evidence / "deployment.json").exists():
+        message += "- Production health, source SHA and target-specific HTTPS checks passed.\n"
+    summary(message)
 
 
 def dispatch(env, raw, output):
+    if env == "production":
+        main = require_main()
+        confirmation_end = confirmation_expiry(main)
+        require_coverage(confirmation_end, time.time())
+        previous_selection = raw
+        # The final full resolution runs below, after verifying the production SSM pin.
+        raw = canonical(json.loads(raw)["manifest"])
     manifest = read_manifest(raw)
     require(manifest["bundle"] == source_bundle(ROOT), "checkout bundle mismatch")
     branch = "staging" if env == "staging" else "main"
@@ -176,8 +330,6 @@ def dispatch(env, raw, output):
                 and manifest["run_id"] == positive(os.environ["GITHUB_RUN_ID"])
                 and manifest["run_attempt"] == positive(os.environ["GITHUB_RUN_ATTEMPT"]),
                 "staging dispatch/run mismatch")
-    else:
-        require_main(os.environ["EXPECTED_MAIN_SHA"])
 
     instance, name, version, sha256 = (os.environ[key] for key in (
         "AUDI_INSTANCE_ID", "AUDI_DOCUMENT", "AUDI_DOCUMENT_VERSION", "AUDI_DOCUMENT_SHA256",
@@ -191,13 +343,21 @@ def dispatch(env, raw, output):
     require((doc["Owner"], doc["Name"], doc["DocumentVersion"], doc["HashType"], doc["Hash"],
              doc["Status"], doc["DocumentType"]) ==
             (account, name, version, "Sha256", sha256, "Active", "Command"), "SSM document pin mismatch")
-    branch_tip(branch, sha)
     if env == "production":
-        require_window()
+        selected = resolve(main)
+        require(canonical(selected) == previous_selection,
+                "staging release or artifact changed after credential acquisition")
+        require(confirmation_expiry(main) == confirmation_end, "production confirmation changed")
+    branch_tip(branch, sha)
+    payload = raw
+    if env == "production":
+        now = time.time()
+        require_coverage(confirmation_end, now)
+        payload = production_request(raw, int(now))
     request = {
         "DocumentName": name, "DocumentVersion": version, "DocumentHash": sha256,
-        "DocumentHashType": "Sha256", "InstanceIds": [instance], "TimeoutSeconds": 90,
-        "Parameters": {"Manifest": [base64.b64encode(raw).decode()]},
+        "DocumentHashType": "Sha256", "InstanceIds": [instance], "TimeoutSeconds": SSM_DELIVERY_SECONDS,
+        "Parameters": {"Manifest": [base64.b64encode(payload).decode()]},
         "Comment": f"Audi {env} GitHub run {os.environ['GITHUB_RUN_ID']}",
     }
     output.mkdir(exist_ok=True)
@@ -206,7 +366,7 @@ def dispatch(env, raw, output):
     response = aws("send-command", "--cli-input-json", json.dumps(request))["Command"]
     command_id = response["CommandId"]
     require(str(uuid.UUID(command_id)) == command_id, "invalid command ID")
-    print(f"SSM command {command_id} targeting {instance}", flush=True)
+    print(f"SSM command {command_id}", flush=True)
     diagnostic = {
         "environment": env, "command_id": command_id, "instance_id": instance, "document": name,
         "document_version": version, "document_hash": sha256, "dispatch_sha": sha,
@@ -242,6 +402,8 @@ def dispatch(env, raw, output):
         result["receipt_sha256"] = digest(receipt)
         (output / "manifest.json").write_bytes(raw)
         (output / "receipt.json").write_bytes(receipt)
+        if env == "production":
+            (output / "selection.json").write_bytes(previous_selection)
         (output / "deployment.json").write_bytes(canonical(result))
         return
     raise ValueError("SSM observation timed out; inspect command and shared host state before retrying")
@@ -252,8 +414,10 @@ if __name__ == "__main__":
         verb, *args = sys.argv[1:]
         if verb == "create" and len(args) == 2:
             create(args[0], Path(args[1]))
-        elif verb == "select" and len(args) == 4:
-            select(positive(args[0]), positive(args[1]), args[2], Path(args[3]))
+        elif verb == "select" and len(args) == 1:
+            select(Path(args[0]))
+        elif verb == "summarize" and len(args) == 2:
+            summarize(args[0], Path(args[1]))
         elif verb == "dispatch" and len(args) == 3 and args[0] in ROUTES:
             dispatch(args[0], Path(args[1]).read_bytes(), Path(args[2]))
         else:

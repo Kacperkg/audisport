@@ -76,9 +76,10 @@ run "least_privilege" {
       for env, doc in aws_ssm_document.deploy :
       jsondecode(doc.content).parameters.Manifest.interpolationType == "ENV_VAR" &&
       length(jsondecode(doc.content).mainSteps) == 1 &&
+      jsondecode(doc.content).mainSteps[0].inputs.timeoutSeconds == "420" &&
       endswith(jsondecode(doc.content).mainSteps[0].inputs.runCommand[2], "' ${env}")
     ])
-    error_message = "Each command document must pass the manifest as data and hard-code its own target."
+    error_message = "Each command document must pass the manifest as data and pin its target and 420-second execution cap."
   }
 }
 

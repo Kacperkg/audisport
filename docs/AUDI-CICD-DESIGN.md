@@ -38,12 +38,30 @@ local image.
 
 A protected staging push runs shared CI, builds and validates one image, and
 publishes to the public Audi GHCR package. Only its digest enters the manifest.
-A successful SSM invocation and public HTTPS release SHA and target checks produce a receipt
-in an immutable Actions artifact. Manual promotion on main checks the expected
-main SHA, successful staging push/run attempt and artifact archive digest,
-receipt-to-manifest binding, ancestry and equality of reviewed and staged Git
-trees. A main merge with additional changes requires fresh staging verification.
-No database-specific controls are required.
+A successful SSM invocation and public HTTPS release SHA and target checks
+produce an immutable Actions artifact. Production has one manual confirmation.
+It derives the reviewed SHA from the protected main dispatch, then finds the
+unique eligible ordinary staging push among the last 30 days and at most
+300 runs. The tested commit must be an ancestor with the exact same Git
+tree, including deployment inputs. Merge commits and fast-forwards can
+preserve that guarantee. A squash, rebase or additional main change that
+breaks it requires new staging evidence.
+
+The resolver checks the latest attempt's application, deployment configuration,
+publish and deploy jobs. It binds the GitHub artifact digest to the archive,
+manifest, target-specific receipt and successful pinned staging invocation.
+It verifies anonymous availability of the exact image digest and repeats
+resolution after AWS credential acquisition. The main tip is checked before
+credentials and as the last GitHub check before dispatch. These checks do
+not make GitHub state and AWS command submission atomic.
+
+A confirmation lasts at most 20 minutes from the original GitHub dispatch.
+Production job reruns require a fresh dispatch. SSM gets the unchanged staging
+manifest in a production-only envelope valid for 510 seconds. The host checks
+freshness on receipt and under shared locks before mutation and requires
+the full 420-second execution budget. Per-release durable attempt markers
+reject replay even while an envelope is fresh. Staging keeps its existing
+manifest format. Audi has one static frontend and needs no database controls.
 
 GitHub must use a custom subject containing the exact repository, environment
 and ref. The default subject observed during discovery cannot satisfy the new

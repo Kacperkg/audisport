@@ -41,6 +41,13 @@
 --query 'Document.[Owner,Name,DocumentVersion,HashType,Hash]'`.
    Recheck SSM online status and ENV_VAR support. Retain the reviewed values
    together in operator records. Never use `$DEFAULT` or `$LATEST`.
+   In `Production`, also set `AUDI_STAGING_DOCUMENT_VERSION` and
+   `AUDI_STAGING_DOCUMENT_SHA256` to the approved staging values. Promotion
+   checks the receipt against those pins, the staging document name derived
+   from the same Terraform prefix, and the configured shared instance.
+   Update both SSM document pins after installing a new reviewed runner.
+   Review the installed bundle, document versions and pins together before
+   enabling the workflows. The production runner requires an expiring request.
 4. Plan a drained maintenance window. Verify every active Vellum deployment,
    backup and maintenance entry point honours the shared pending file and
    lock order. Verify protected path ownership and the pinned coordinator
@@ -89,18 +96,50 @@ failed deployment has no eligible artifact. If a rebuild is appropriate,
 rerun **all jobs** or push a new reviewed staging commit. A rerun changes the
 run attempt and makes the older attempt ineligible.
 
-After staging is verified, merge the reviewed staged commit into main while
-preserving its tree and ancestry. Avoid squash/rebase promotion if it drops
-the staging SHA. Manually dispatch `Promote Audi production` on main with
-the current reviewed main SHA, successful staging run and attempt, UTC
-maintenance window end and `PROMOTE AUDI PRODUCTION`. The window must have
-9–60 minutes left at dispatch to SSM. Confirm host availability and operator
-coverage. The protected job validates the artifact and uses the exact staging
-digest. Verify the completed receipt and public target. GitHub cannot prove an
-operator-selected window is a scheduled business window. Store the approved
-window and release decision in operator records.
+After staging succeeds, merge the tested staging commit into `main` with a
+merge commit that preserves its ancestry and full tree. A fast-forward also
+preserves both. Squash and rebase promotions are ineligible if they drop the
+tested ancestor. A merge with additional changes needs a fresh staging release.
 
-Artifacts are retained for 30 days. Retain known-good digests and authorised
+In Actions, choose **Promote Audi production**, select `main`, and check
+**Deploy the verified staging image now and stay available for recovery**.
+Use a fresh dispatch when you can remain available through deployment and
+any recovery. The production job requires protected `main`, a checked
+confirmation and an enabled, restricted `Production` environment. Merges
+have no production trigger. GitHub may show other refs in its dispatch
+picker. Environment reviewer rules, where configured, are separate from the
+operator checkbox.
+
+The resolver searches up to 300 ordinary staging pushes created in the last
+30 days, in pages of 100. It requires exactly one same-tree ancestor with a
+successful latest attempt, successful required jobs and a valid, unexpired
+deployment artifact. It verifies the archive and receipt hashes, staging
+SSM pin, public HTTPS evidence and anonymous availability of the exact GHCR
+digest. An ambiguous match, truncated search, changed run attempt or
+invalid artifact stops promotion. The job summary records the selected run,
+digest and verification evidence.
+
+The job checks the protected `main` tip after any environment wait and again
+before SSM submission. It repeats release resolution and compares the evidence
+after obtaining credentials. GitHub and SSM do not share an atomic transaction.
+A ref or release may change after the last GitHub check.
+
+The initial confirmation lasts up to 20 minutes from GitHub run creation.
+A queued or delayed job must have at least 510 seconds remaining before
+submission. Start a new confirmed dispatch if the confirmation expires.
+Rerunning production jobs cannot renew approval. The request expires 510
+seconds after issuance. The runner requires 420 seconds remaining on receipt
+and again under the shared locks before mutation, so delayed commands have
+at most 90 seconds to begin. Keep workflow and host clocks synchronised.
+The command's 420-second execution cap and durable attempt record still apply.
+A time limit does not replace operator availability or the recovery procedure.
+Activation, bundle updates and recovery still use the separately approved,
+drained maintenance procedure. Check the job summary, production receipt
+and public target after completion.
+
+Artifacts are retained for 30 days. The invocation receipts contain the
+instance identifier and SSM pin metadata. Confirm that the repository's
+artifact visibility is acceptable before enabling releases. Retain known-good digests and authorised
 receipt copies for the rollback horizon. Pin the reviewed document and runner
 revision before each compatible bundle migration. Scan findings depend on
 registry advisories and the Trivy database. The dependency gate covers the
