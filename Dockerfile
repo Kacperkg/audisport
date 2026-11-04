@@ -10,13 +10,19 @@ COPY src ./src
 COPY public ./public
 # Public files can have restrictive permissions in a developer's checkout.
 # Normalize compiled output so the unprivileged runtime can read every asset.
-RUN pnpm build && chmod -R a=rX dist
+ARG VCS_REF=uncommitted
+RUN pnpm build && printf '%s\n' "$VCS_REF" > dist/release-sha.txt && chmod -R a=rX dist
 
-FROM nginx/nginx-unprivileged:1.30.6-alpine@sha256:517607ae849a46afbd400616a783e4ead0290f52d20ccc0618ccea1a49362474 AS runtime
+FROM nginx/nginx-unprivileged:1.30.6-alpine@sha256:44e74ca483234093081138b6d7b6f561d55557756a2deefc3a5056148defeb99 AS runtime
+
+# Remove this targeted Alpine patch once the pinned base carries the fix.
+USER root
+RUN apk add --no-cache --upgrade 'libexpat>=2.10.0-r0'
 
 ARG VCS_REF=uncommitted
 LABEL org.opencontainers.image.title="Audi frontend" \
-      org.opencontainers.image.revision="${VCS_REF}"
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.source="https://github.com/Kacperkg/audisport"
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 USER 101:101

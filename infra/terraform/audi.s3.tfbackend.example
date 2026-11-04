@@ -1,0 +1,4 @@
+# Replace the synthetic account and placeholder bucket with approved operator values.
+bucket              = "REPLACE-WITH-AUDI-STATE-BUCKET"
+key                 = "audi/deployment.tfstate"
+allowed_account_ids = ["123456789012"]

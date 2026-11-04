@@ -1,0 +1,88 @@
+name: Audi CI
+on:
+  pull_request:
+    branches: [main, staging]
+  workflow_call:
+    inputs:
+      validate_image:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audi-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  application:
+    name: Application
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.17.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.22.1'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check && pnpm lint && pnpm exec tsc --noEmit
+      - run: pnpm test --passWithNoTests && pnpm build
+      - run: pnpm audit --prod --audit-level=high
+
+  deployment:
+    name: Deployment configuration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: '1.14.5'
+          terraform_wrapper: false
+      - name: Validate deployment code
+        run: |
+          python3 -B -m unittest discover -s deploy/tests -v
+          bash -n deploy/check-image.sh
+          bash -n deploy/check-security.sh
+          go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          for project in audi-staging audi-production; do
+            AUDI_PROJECT="$project" AUDI_IMAGE=ghcr.io/kacperkg/audisport-frontend@sha256:$(printf '%064d' 0) \
+              docker compose --env-file /dev/null -f deploy/host/compose.yml --project-name "$project" config --quiet
+          done
+      - name: Validate Terraform without AWS credentials
+        run: |
+          terraform -chdir=infra/terraform fmt -check -recursive
+          for root in infra/terraform infra/terraform/bootstrap; do
+            terraform -chdir="$root" init -backend=false -lockfile=readonly
+            terraform -chdir="$root" validate
+          done
+          terraform -chdir=infra/terraform test
+      - name: Scan Terraform
+        run: bash deploy/check-security.sh config --severity HIGH,CRITICAL --exit-code 1 infra/terraform
+
+  image:
+    name: Docker image
+    if: ${{ github.event_name == 'pull_request' || inputs.validate_image }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build and test production container
+        run: |
+          docker build --build-arg "VCS_REF=$GITHUB_SHA" --tag audi-ci:check .
+          bash deploy/check-image.sh audi-ci:check "$GITHUB_SHA"
+      - name: Scan production container
+        run: bash deploy/check-security.sh image --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 audi-ci:check

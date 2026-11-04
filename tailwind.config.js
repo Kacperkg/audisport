@@ -5,7 +5,13 @@ module.exports = {
       fontFamily: {
         pp: ['var(--font-pp)'],
         inter: ['Inter', 'system-ui', 'sans-serif'],
-        jetbrains: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        jetbrains: [
+          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'monospace',
+        ],
       },
     },
   },

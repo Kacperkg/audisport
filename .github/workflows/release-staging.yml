@@ -1,0 +1,110 @@
+name: Release Audi staging
+on:
+  push:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audi-staging
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    if: github.repository == 'Kacperkg/audisport' && github.ref_protected
+    uses: ./.github/workflows/ci.yml
+    with:
+      validate_image: false
+
+  publish:
+    needs: ci
+    if: vars.AUDI_PUBLISH_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+      attempt: ${{ steps.push.outputs.attempt }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build and test the release image
+        run: |
+          docker build --platform linux/amd64 --build-arg "VCS_REF=$GITHUB_SHA" --tag audi-ci:release .
+          bash deploy/check-image.sh audi-ci:release "$GITHUB_SHA"
+      - name: Scan the same image before publishing
+        run: bash deploy/check-security.sh image --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 audi-ci:release
+      - name: Publish the tested image and record its digest
+        id: push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          image=ghcr.io/${GITHUB_REPOSITORY,,}-frontend
+          tag="$image:run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io' EXIT
+          docker tag audi-ci:release "$tag"
+          docker push "$tag" | tee "$RUNNER_TEMP/audi-push.log"
+          digest=$(awk '$2 == "digest:" && $4 == "size:" {print $3}' "$RUNNER_TEMP/audi-push.log")
+          [[ $digest =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf 'image=%s@%s\nattempt=%s\n' "$image" "$digest" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: publish
+    if: vars.AUDI_STAGING_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AUDI_AWS_ACCOUNT_ID: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
+      AUDI_INSTANCE_ID: ${{ vars.AUDI_INSTANCE_ID }}
+      AUDI_DOCUMENT: ${{ vars.AUDI_DOCUMENT }}
+      AUDI_DOCUMENT_VERSION: ${{ vars.AUDI_DOCUMENT_VERSION }}
+      AUDI_DOCUMENT_SHA256: ${{ vars.AUDI_DOCUMENT_SHA256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Bind the manifest to this attempt and confirm anonymous registry access
+        env:
+          IMAGE: ${{ needs.publish.outputs.image }}
+          BUILD_ATTEMPT: ${{ needs.publish.outputs.attempt }}
+        run: |
+          test "$BUILD_ATTEMPT" = "$GITHUB_RUN_ATTEMPT"
+          python3 deploy/release.py create "$IMAGE" candidate.json
+          docker buildx imagetools inspect "$IMAGE" >/dev/null
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ vars.AUDI_ROLE_ARN }}
+          allowed-account-ids: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
+          role-duration-seconds: 900
+          role-session-name: audi-staging-${{ github.run_id }}-${{ github.run_attempt }}
+      - run: python3 deploy/release.py dispatch staging candidate.json evidence
+      - name: Publish the promotion candidate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: audi-staged-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            evidence/manifest.json
+            evidence/receipt.json
+            evidence/deployment.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve command status
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: audi-staging-status-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence/status.json
+          if-no-files-found: ignore
+          retention-days: 30

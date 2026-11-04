@@ -16,3 +16,12 @@
 **/.env.*
 **/*.env
 **/*.env.*
+**/.git
+**/.npmrc
+**/.netrc
+**/.ssh
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.tfstate*

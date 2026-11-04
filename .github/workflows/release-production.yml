@@ -1,0 +1,90 @@
+name: Promote Audi production
+on:
+  workflow_dispatch:
+    inputs:
+      main_sha:
+        description: Reviewed current main commit SHA
+        type: string
+        required: true
+      staging_run_id:
+        description: Successful staging workflow run ID
+        type: string
+        required: true
+      staging_attempt:
+        description: Successful staging workflow run attempt
+        type: string
+        required: true
+      window_end_utc:
+        description: Maintenance window end in UTC (YYYY-MM-DDTHH:MM:SSZ)
+        type: string
+        required: true
+      confirmation:
+        description: Type PROMOTE AUDI PRODUCTION
+        type: string
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: audi-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.repository == 'Kacperkg/audisport' &&
+      github.ref == 'refs/heads/main' && github.ref_protected &&
+      vars.AUDI_PRODUCTION_DEPLOY_ENABLED == 'true' &&
+      inputs.confirmation == 'PROMOTE AUDI PRODUCTION' &&
+      inputs.main_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: Production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN_SHA: ${{ inputs.main_sha }}
+      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+      STAGING_ATTEMPT: ${{ inputs.staging_attempt }}
+      WINDOW_END_UTC: ${{ inputs.window_end_utc }}
+      AUDI_AWS_ACCOUNT_ID: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
+      AUDI_INSTANCE_ID: ${{ vars.AUDI_INSTANCE_ID }}
+      AUDI_DOCUMENT: ${{ vars.AUDI_DOCUMENT }}
+      AUDI_DOCUMENT_VERSION: ${{ vars.AUDI_DOCUMENT_VERSION }}
+      AUDI_DOCUMENT_SHA256: ${{ vars.AUDI_DOCUMENT_SHA256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the exact staging artifact and reviewed main tree
+        run: python3 deploy/release.py select "$STAGING_RUN_ID" "$STAGING_ATTEMPT" "$EXPECTED_MAIN_SHA" candidate.json
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ vars.AUDI_ROLE_ARN }}
+          allowed-account-ids: ${{ vars.AUDI_AWS_ACCOUNT_ID }}
+          role-duration-seconds: 900
+          role-session-name: audi-production-${{ github.run_id }}-${{ github.run_attempt }}
+      - run: python3 deploy/release.py dispatch production candidate.json evidence
+      - name: Publish the production receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: audi-production-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            evidence/manifest.json
+            evidence/receipt.json
+            evidence/deployment.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve command status
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: audi-production-status-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence/status.json
+          if-no-files-found: ignore
+          retention-days: 30

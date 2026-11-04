@@ -17,3 +17,16 @@ dist-ssr
 __unconfig*
 todos.json
 .vercel
+
+# Terraform local inputs and state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+*.tfbackend
+.terraform.tfstate.lock.info
+
+# Python deployment tooling
+__pycache__/

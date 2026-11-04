@@ -1,0 +1,43 @@
+services:
+  frontend:
+    hostname: ${AUDI_PROJECT:?Set the Audi project}-frontend
+    # Intentionally no build section: promote the already tested image.
+    image: ${AUDI_IMAGE:?Set the reviewed image digest}
+    pull_policy: never
+    user: '101:101'
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,uid=101,gid=101,mode=1770
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:8080/healthz',
+        ]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    networks:
+      web:
+        aliases:
+          - ${AUDI_PROJECT:?Set the Audi project}-frontend
+
+networks:
+  web:
+    external: true
+    name: web
