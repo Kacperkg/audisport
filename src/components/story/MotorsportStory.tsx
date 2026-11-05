@@ -16,17 +16,19 @@ export default function MotorsportStory() {
       ref={sectionRef}
       aria-label="Motorsport timeline"
       data-story-section
-      className="relative bg-black story-wide:h-screen story-wide:overflow-clip"
+      className="relative bg-black"
     >
-      <div
-        ref={trackRef}
-        className="flex w-full flex-col story-wide:h-full story-wide:w-max story-wide:flex-row"
-      >
-        <StoryIntro />
-        {CHAPTERS.map((chapter) => (
-          <StoryChapter key={chapter.title} chapter={chapter} />
-        ))}
-        <FormulaOneChapter />
+      <div className="story-wide:sticky story-wide:top-0 story-wide:h-screen story-wide:overflow-clip">
+        <div
+          ref={trackRef}
+          className="relative flex w-full flex-col story-wide:h-full story-wide:w-max story-wide:flex-row"
+        >
+          <StoryIntro />
+          {CHAPTERS.map((chapter) => (
+            <StoryChapter key={chapter.title} chapter={chapter} />
+          ))}
+          <FormulaOneChapter />
+        </div>
       </div>
     </section>
   )
