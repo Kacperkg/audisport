@@ -16,7 +16,7 @@ export default function MotorsportStory() {
       ref={sectionRef}
       aria-label="Motorsport timeline"
       data-story-section
-      className="relative bg-black story-wide:h-screen story-wide:overflow-hidden"
+      className="relative bg-black story-wide:h-screen story-wide:overflow-clip"
     >
       <div
         ref={trackRef}

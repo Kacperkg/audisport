@@ -107,20 +107,19 @@ export function useStoryAnimation(
 
       const revealTextItem = (item: HTMLElement) => {
         if (item.dataset.revealType === 'soft') {
-          gsap.to(item, {
+          return gsap.to(item, {
             opacity: 1,
             y: 0,
             duration: 0.5,
             ease: 'power2.out',
           })
-          return
         }
 
         const content = item.querySelector<HTMLElement>('[data-text-content]')
         const wipe = item.querySelector<HTMLSpanElement>('[data-text-wipe]')
         if (!content || !wipe) return
 
-        gsap
+        return gsap
           .timeline()
           .set(wipe, { transformOrigin: 'left center' })
           .to(wipe, { scaleX: 1, duration: 0.2, ease: 'power3.inOut' })
@@ -133,18 +132,19 @@ export function useStoryAnimation(
         if (revealedItems.has(item)) return
         revealedItems.add(item)
 
-        if (item.dataset.storyImage !== undefined) {
-          gsap.to(item, {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            ease: 'power2.out',
-            overwrite: 'auto',
-          })
-          return
-        }
+        const animation =
+          item.dataset.storyImage !== undefined
+            ? gsap.to(item, {
+                opacity: 1,
+                y: 0,
+                duration: 0.5,
+                ease: 'power2.out',
+                overwrite: 'auto',
+              })
+            : revealTextItem(item)
 
-        revealTextItem(item)
+        // A hidden Safari window can update scroll before running animation frames.
+        if (document.hidden) animation?.progress(1)
       }
 
       const allRevealItems = [...revealItems, ...storyImages]
@@ -198,6 +198,8 @@ export function useStoryAnimation(
           track,
           {
             x: () => -getScrollDistance(),
+            // Safari can paint the offscreen finale over the composited track.
+            force3D: false,
             ease: 'none',
             duration: getScrollDistance,
           },
