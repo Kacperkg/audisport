@@ -128,7 +128,7 @@ export function useStoryAnimation(
           .to(wipe, { scaleX: 0, duration: 0.24, ease: 'power3.inOut' }, 0.2)
       }
 
-      const revealItem = (item: HTMLElement) => {
+      const revealItem = (item: HTMLElement, immediate = false) => {
         if (revealedItems.has(item)) return
         revealedItems.add(item)
 
@@ -144,17 +144,33 @@ export function useStoryAnimation(
             : revealTextItem(item)
 
         // A hidden Safari window can update scroll before running animation frames.
-        if (document.hidden) animation?.progress(1)
+        if (document.hidden || immediate) animation?.progress(1)
       }
 
       const allRevealItems = [...revealItems, ...storyImages]
+      let revealPositions = allRevealItems.map((item) => ({
+        item,
+        offset: getTrackOffset(item),
+      }))
+
       const revealActiveItems = () => {
         const trackPosition = Math.abs(Number(gsap.getProperty(track, 'x')))
         const revealPoint = trackPosition + window.innerWidth * 0.75
 
-        allRevealItems.forEach((item) => {
-          if (revealPoint >= getTrackOffset(item)) revealItem(item)
+        revealPositions.forEach(({ item, offset }) => {
+          if (!revealedItems.has(item) && revealPoint >= offset) {
+            // A jump past the item's entrance should leave its content visible.
+            revealItem(item, offset < trackPosition)
+          }
         })
+      }
+
+      const refreshRevealPositions = () => {
+        revealPositions = allRevealItems.map((item) => ({
+          item,
+          offset: getTrackOffset(item),
+        }))
+        revealActiveItems()
       }
 
       const revealOnScroll = () => {
@@ -168,74 +184,87 @@ export function useStoryAnimation(
         })
       }
 
-      return { f1, revealActiveItems, revealItem, revealOnScroll }
+      return {
+        f1,
+        refreshRevealPositions,
+        revealActiveItems,
+        revealItem,
+        revealOnScroll,
+      }
     }
 
     media.add(
       '(min-width: 1536px) and (prefers-reduced-motion: no-preference)',
-      () => {
+      (context) => {
         const revealController = createRevealController()
-        const timeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: section,
-            start: 'top top',
-            end: () =>
-              `+=${
-                getScrollDistance() * DESKTOP_SCROLL_PACE +
-                window.innerHeight *
-                  (DESKTOP_FINALE_DISTANCE + DESKTOP_FINALE_HOLD)
-              }`,
-            pin: true,
-            scrub: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onRefresh: revealController.revealActiveItems,
-            onUpdate: revealController.revealActiveItems,
-          },
-        })
+        const originalHeight = section.style.height
+        const timeline = gsap.timeline({ paused: true })
 
-        timeline.to(
-          track,
-          {
-            x: () => -getScrollDistance(),
+        const refreshTimeline = context.add('refreshTimeline', () => {
+          // Return to the original values before rebuilding responsive durations.
+          timeline.progress(0, true).clear()
+          const viewportHeight = window.innerHeight
+          const travelDistance = getScrollDistance()
+          const revealScrollDistance =
+            travelDistance * DESKTOP_SCROLL_PACE +
+            viewportHeight * DESKTOP_FINALE_DISTANCE
+          const holdScrollDistance = viewportHeight * DESKTOP_FINALE_HOLD
+
+          section.style.height = `${
+            viewportHeight + revealScrollDistance + holdScrollDistance
+          }px`
+
+          timeline.to(track, {
+            x: -travelDistance,
             // Safari can paint the offscreen finale over the composited track.
             force3D: false,
             ease: 'none',
-            duration: getScrollDistance,
-          },
-          0,
-        )
+            duration: travelDistance,
+          })
 
-        const viewportHeight = window.innerHeight
-        appendF1RevealAnimation(
-          timeline,
-          revealController.f1,
-          {
-            question: viewportHeight * 0.14,
-            masks: viewportHeight * 0.42,
-            maskStagger: viewportHeight * 0.07,
-            rule: viewportHeight * 0.05,
-            label: viewportHeight * 0.06,
-            titleIn: viewportHeight * 0.06,
-            titleOut: viewportHeight * 0.08,
-            support: viewportHeight * 0.05,
-          },
-          -20,
-        )
+          appendF1RevealAnimation(
+            timeline,
+            revealController.f1,
+            {
+              question: viewportHeight * 0.14,
+              masks: viewportHeight * 0.42,
+              maskStagger: viewportHeight * 0.07,
+              rule: viewportHeight * 0.05,
+              label: viewportHeight * 0.06,
+              titleIn: viewportHeight * 0.06,
+              titleOut: viewportHeight * 0.08,
+              support: viewportHeight * 0.05,
+            },
+            -20,
+          )
 
-        // Keep the fully revealed car and copy pinned for another viewport of
-        // scrolling before the footer enters, without slowing the reveal itself.
-        const revealScrollDistance =
-          getScrollDistance() * DESKTOP_SCROLL_PACE +
-          viewportHeight * DESKTOP_FINALE_DISTANCE
-        timeline.to(
-          {},
-          {
-            duration:
-              timeline.duration() *
-              ((viewportHeight * DESKTOP_FINALE_HOLD) / revealScrollDistance),
-          },
-        )
+          // Reserve one viewport of scrolling for the fully revealed finale.
+          timeline.to(
+            {},
+            {
+              duration:
+                timeline.duration() *
+                (holdScrollDistance / revealScrollDistance),
+            },
+          )
+        })
+
+        refreshTimeline()
+        ScrollTrigger.create({
+          animation: timeline,
+          trigger: section,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: true,
+          invalidateOnRefresh: true,
+          onRefreshInit: () => refreshTimeline(),
+          onRefresh: revealController.refreshRevealPositions,
+          onUpdate: revealController.revealActiveItems,
+        })
+
+        return () => {
+          section.style.height = originalHeight
+        }
       },
     )
 
