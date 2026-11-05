@@ -67,7 +67,6 @@ export default function FormulaOneChapter() {
             data-f1-copy-overlay
             data-header-theme="light"
           >
-            {/* Leave header clearance when the footer scrolls the stage upward. */}
             <div className="absolute left-6 top-48 sm:left-10 sm:top-52 story-wide:left-20">
               <div className="h-px w-16 bg-red-600 sm:w-24" data-f1-copy-rule />
               <p
@@ -98,6 +97,16 @@ export default function FormulaOneChapter() {
                 Built to challenge.
               </p>
             </div>
+
+            <a
+              className="font-jetbrains absolute bottom-8 right-6 text-right text-[8px] uppercase leading-4 tracking-[0.18em] text-black/40 transition-colors hover:text-black/70 focus-visible:text-black sm:bottom-10 sm:right-10 sm:text-[9px] story-wide:bottom-14 story-wide:right-20 motion-reduce:static motion-reduce:mt-6 motion-reduce:block"
+              href="https://kacpergajdarski.com/"
+              rel="author"
+            >
+              Independent project by
+              <br />
+              Kacper Gajdarski
+            </a>
           </div>
         </div>
       </div>
